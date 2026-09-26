@@ -15,6 +15,19 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "error_message" not in st.session_state:
+    st.session_state.error_message = None
+
+@st.dialog("⚠️ Error")
+def show_error_dialog(error_text):
+    st.markdown(error_text)
+    if st.button("Close", key="error_close"):
+        st.session_state.error_message = None
+        st.rerun()
+
+if st.session_state.error_message:
+    show_error_dialog(st.session_state.error_message)
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -27,6 +40,7 @@ if prompt := st.chat_input("Ask me anything..."):
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
+        error_occurred = False
 
         try:
             response = requests.post(
@@ -41,17 +55,26 @@ if prompt := st.chat_input("Ask me anything..."):
             full_response = data.get("response", "Sorry, I encountered an error processing your request.")
 
         except requests.exceptions.ConnectionError:
-            full_response = f"⚠️ Error: Cannot connect to backend at {BACKEND_URL}. Please ensure the backend is running."
+            error_msg = f"Cannot connect to backend at {BACKEND_URL}. Please ensure the backend is running."
+            st.session_state.error_message = error_msg
+            error_occurred = True
         except requests.exceptions.Timeout:
-            full_response = "⚠️ Error: Request timed out. Please try again."
+            st.session_state.error_message = "Request timed out. Please try again."
+            error_occurred = True
         except requests.exceptions.HTTPError as e:
-            full_response = f"⚠️ Error: {e.response.status_code} - {e.response.text}"
+            error_msg = f"HTTP {e.response.status_code}: {e.response.text}"
+            st.session_state.error_message = error_msg
+            error_occurred = True
         except Exception as e:
-            full_response = f"⚠️ Error: {str(e)}"
+            st.session_state.error_message = str(e)
+            error_occurred = True
 
-        message_placeholder.markdown(full_response)
-
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        if not error_occurred:
+            message_placeholder.markdown(full_response)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+        else:
+            st.session_state.messages.pop()
+            st.rerun()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Settings")
