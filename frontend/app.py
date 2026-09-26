@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import os
+import uuid
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,9 +12,13 @@ st.title("🤖 Multi-Agent RAG Chat")
 st.markdown("Chat with an AI-powered assistant that retrieves relevant information to answer your questions.")
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "90"))
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
 
 if "error_message" not in st.session_state:
     st.session_state.error_message = None
@@ -45,14 +50,15 @@ if prompt := st.chat_input("Ask me anything..."):
         try:
             response = requests.post(
                 f"{BACKEND_URL}/chat",
-                json={"message": prompt},
-                timeout=30,
+                json={"message": prompt, "session_id": st.session_state.session_id},
+                timeout=REQUEST_TIMEOUT,
                 stream=False
             )
             response.raise_for_status()
 
             data = response.json()
             full_response = data.get("response", "Sorry, I encountered an error processing your request.")
+            st.session_state.session_id = data.get("session_id", st.session_state.session_id)
 
         except requests.exceptions.ConnectionError:
             error_msg = f"Cannot connect to backend at {BACKEND_URL}. Please ensure the backend is running."
@@ -82,4 +88,5 @@ st.sidebar.info(f"Backend URL: `{BACKEND_URL}`")
 
 if st.sidebar.button("Clear Chat History"):
     st.session_state.messages = []
+    st.session_state.session_id = str(uuid.uuid4())
     st.rerun()
