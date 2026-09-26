@@ -56,7 +56,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
         )
 
         message = HumanMessage(content=request.message)
-        response = model.invoke([message])
+        response = await model.ainvoke([message])
 
         return ChatResponse(
             response=response.content,
