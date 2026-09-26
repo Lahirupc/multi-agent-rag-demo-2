@@ -5,6 +5,9 @@ from pydantic import BaseModel
 import logging
 from langchain_openrouter import ChatOpenRouter
 from langchain_core.messages import HumanMessage
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,7 +50,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
             raise HTTPException(status_code=500, detail="API key not configured")
 
         model = ChatOpenRouter(
-            model="openrouter/auto",
+            model="liquid/lfm-2.5-2.6b:free",
             openrouter_api_key=api_key,
             temperature=0.7
         )
@@ -59,9 +62,6 @@ async def chat(request: ChatRequest) -> ChatResponse:
             response=response.content,
             status="success"
         )
-
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error processing chat: {str(e)}")
         raise HTTPException(status_code=500, detail="Error processing request")
