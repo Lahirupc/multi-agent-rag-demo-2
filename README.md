@@ -22,6 +22,70 @@ This project is organized as a monorepo with two main parts:
 
 The frontend communicates with the backend's `/chat` endpoint to process user messages through an LLM, enabling a seamless chat experience with streaming capabilities.
 
+### Agent Architecture
+
+The backend orchestrates a LangGraph multi-agent workflow (`backend/agents/graph.py`) behind the `/chat` and `/chat/stream` endpoints:
+
+```mermaid
+flowchart TD
+    START(["START"]) --> Supervisor
+
+    Supervisor["🧭 Supervisor Node
+(agents/supervisor.py)
+LLM classifies intent"]
+
+    Supervisor -- "route = retrieval
+(factual question)" --> Retrieval
+    Supervisor -- "route = research
+(complex question)" --> Research
+    Supervisor -- "route = response
+(casual / simple)" --> Response
+
+    Retrieval["📚 Retrieval Node
+(agents/retrieval.py)
+single hybrid search, k=4"]
+    Retrieval --> Response
+
+    Research["🔬 Research Node
+(agents/research.py)
+reformulate query + hybrid search
+accumulate findings"]
+    Research -- "iterations < max_research_iterations
+reformulate & search again" --> Research
+    Research -- "iterations >= max_research_iterations" --> Response
+
+    Hybrid[["⚙️ Hybrid Search
+(agents/hybrid_retrieval.py)
+dense (Pinecone embeddings) +
+sparse (BM25), weighted fusion"]]
+    Retrieval -.uses.-> Hybrid
+    Research -.uses.-> Hybrid
+
+    Response["✍️ Response Node
+(agents/response.py)
+builds context prompt from
+retrieved_docs / research_findings
+LLM generates final answer"]
+    Response --> END(["END"])
+
+    LLM[("🤖 Chat Model
+(agents/llm.py)
+OpenRouter via LangChain")]
+    Supervisor -.calls.-> LLM
+    Research -.calls.-> LLM
+    Response -.calls.-> LLM
+
+    Checkpoint[("💾 MemorySaver Checkpointer
+keyed by session_id / thread_id")]
+    Checkpoint -.persists state for.-> Supervisor
+```
+
+- **Supervisor**: an LLM call classifies the latest user message into `retrieval`, `research`, or `response`.
+- **Retrieval**: runs one hybrid (dense + BM25) search and flows straight to `response`.
+- **Research**: iteratively reformulates the query and searches again, accumulating findings until `research_iterations` reaches `max_research_iterations` (default 3), then flows to `response`.
+- **Response**: builds a context-aware system prompt from any retrieved docs/findings and generates the final answer via the chat model.
+- State is checkpointed per `session_id` via LangGraph's `MemorySaver`, enabling multi-turn conversations.
+
 ## Getting Started
 
 These steps will get both the backend API and the frontend chat UI running locally. Run each in its own terminal window, starting with the backend.
