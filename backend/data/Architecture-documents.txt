@@ -1,0 +1,107 @@
+ARCHITECTURE DOCUMENTS
+======================
+
+Multi-Agent RAG Demo Project Architecture
+------------------------------------------
+
+System Overview
+The system is a multi-agent Retrieval-Augmented Generation (RAG) system built with LangGraph and FastAPI. It combines a Streamlit frontend with a sophisticated backend that uses multiple specialized agents to answer user queries.
+
+Monorepo Structure
+The system uses a monorepo with two main components:
+1. Frontend: A Streamlit chat interface that allows users to interact with the RAG system
+2. Backend: A FastAPI REST API that implements the multi-agent orchestration
+
+Frontend Architecture (Streamlit)
+- Provides a real-time chat interface
+- Maintains conversation history client-side
+- Communicates with the backend via HTTP requests
+- Displays responses and error handling in a user-friendly manner
+
+Backend Architecture (FastAPI)
+- Exposes a /chat endpoint that accepts user messages
+- Implements a LangGraph-based multi-agent system
+- Manages conversation context and routing
+- Integrates with vector databases and LLMs
+
+Multi-Agent System Design
+The backend uses four specialized agents working in coordination:
+
+1. Supervisor Agent
+   - Routes incoming user messages to appropriate handlers
+   - Analyzes user questions to determine required action
+   - Decides between retrieval, research, or simple response
+
+2. Retrieval Agent
+   - Performs vector search on document collections
+   - Searches Pinecone for relevant information
+   - Returns top-k most relevant chunks
+
+3. Research Agent
+   - Iteratively searches and synthesizes information
+   - Performs up to 3 refinement iterations
+   - Deepens understanding through repeated searches
+
+4. Response Agent
+   - Generates final answers using context and findings
+   - Uses retrieved documents as context for the LLM
+   - Ensures responses are grounded in retrieved information
+
+Technology Stack
+- Frontend: Streamlit 1.41.1
+- Backend: FastAPI 0.141.1
+- Graph Orchestration: LangGraph 1.2.11
+- Vector Store: Pinecone
+- LLM Provider: OpenRouter
+- Embeddings: OpenRouter text-embedding-3-small
+- Language: Python 3.12+
+- ASGI Server: Uvicorn 0.31.0+
+
+LangGraph State Management
+- StateGraph: Directed graph where nodes represent agents
+- State Accumulation: Uses add_messages reducer for conversation history
+- Checkpointing: MemorySaver provides in-memory checkpoint storage
+- Thread-Based: Each conversation has a unique thread ID for isolation
+- Conditional Edges: Routes between agents based on state content
+
+Vector Search Architecture
+- Embeddings: Text converted to 1536-dimensional vectors
+- Semantic Similarity: Similar text has similar embeddings
+- Fast Retrieval: Vector database enables millisecond-level searches
+- Metadata Filtering: Results can be filtered by source and other fields
+
+Document Processing Pipeline
+1. Documents are split into chunks (1000 tokens with 200-token overlap)
+2. Chunks are converted to embeddings (1536-dimensional vectors)
+3. Embeddings stored with metadata (source filename, chunk index)
+4. Pinecone index stores vectors for fast similarity search
+5. Query embedding is compared against stored embeddings
+
+API Contract
+Request Format:
+POST /chat
+Content-Type: application/json
+{
+  "message": "user message text"
+}
+
+Response Format:
+{
+  "response": "assistant response text",
+  "status": "success"
+}
+
+Error Response:
+{
+  "detail": "error description"
+}
+
+Status Codes:
+- 200: Success
+- 400: Empty message
+- 500: API key missing or processing error
+
+Data Flow
+User → Streamlit UI → HTTP request to /chat → Supervisor Agent →
+Retrieval/Research Agent (as needed) → Response Agent →
+OpenRouter LLM → Response returned to frontend

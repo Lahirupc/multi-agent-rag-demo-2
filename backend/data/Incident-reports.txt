@@ -1,0 +1,101 @@
+INCIDENT REPORTS
+================
+
+Incident Report Template
+------------------------
+
+Date: [Date of Incident]
+Time: [Time Incident Occurred]
+Severity: [Critical/High/Medium/Low]
+Status: [Open/In Progress/Resolved/Closed]
+Reported By: [Reporter Name]
+
+Incident Summary
+---------------
+[Brief description of what happened]
+
+Timeline
+--------
+[HH:MM] - [What happened]
+[HH:MM] - [What was observed]
+[HH:MM] - [Action taken]
+[HH:MM] - [Result of action]
+
+Root Cause
+----------
+[Analysis of why the incident occurred]
+[Contributing factors]
+
+Impact Assessment
+-----------------
+Services Affected: [List affected services/components]
+Users Impacted: [Number of users, percentage]
+Duration: [How long issue persisted]
+Data Loss: [Yes/No, if yes describe]
+Severity Justification: [Why assigned this severity]
+
+Resolution
+----------
+[Steps taken to resolve]
+[Temporary fixes applied]
+[Permanent fixes implemented]
+[Testing performed to verify resolution]
+
+Prevention
+----------
+[Changes to prevent recurrence]
+[Monitoring improvements]
+[Process improvements]
+[Documentation updates needed]
+
+Sample Incident Report Example
+------------------------------
+
+Date: 2026-09-27
+Time: 14:30 UTC
+Severity: High
+Status: Resolved
+Reported By: DevOps Team
+
+Incident Summary
+Backend API became unresponsive during peak usage hours, causing 45-minute outage affecting chat functionality.
+
+Timeline
+--------
+14:30 - Multiple alerts triggered for backend response time exceeding 30 seconds
+14:35 - Support team confirmed users unable to send chat messages
+14:40 - DevOps began investigation, found backend memory usage at 95%
+14:45 - Restarted backend service
+14:50 - Service restored, normal response times confirmed
+15:00 - Post-incident analysis began
+
+Root Cause
+Memory leak in LangGraph checkpoint storage due to accumulating session states without cleanup. Sessions were not being properly pruned when conversations were cleared.
+
+Impact Assessment
+Services Affected: Chat endpoint, Streamlit frontend
+Users Impacted: ~500 users (15% of active users)
+Duration: 45 minutes
+Data Loss: No
+Severity Justification: High - significant user impact and potential to affect business operations
+
+Resolution
+1. Restarted backend service to clear memory
+2. Added session cleanup logic to checkpoint manager
+3. Implemented automatic session pruning after 30 days of inactivity
+4. Added memory monitoring alerts (threshold: 80% memory usage)
+
+Prevention
+1. Implement periodic checkpoint cleanup in LangGraph
+2. Add memory usage monitoring and alerts
+3. Configure maximum checkpoint storage limits
+4. Regular load testing to identify memory issues before production impact
+5. Document session lifecycle and cleanup procedures
+
+Follow-up Items
+---------------
+- [ ] Schedule comprehensive load testing
+- [ ] Review LangGraph memory management in documentation
+- [ ] Implement automated memory optimization
+- [ ] Add monitoring dashboard for resource usage
+- [ ] Schedule training for support team on incident response

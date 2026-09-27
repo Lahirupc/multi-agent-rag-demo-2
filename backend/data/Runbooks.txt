@@ -1,0 +1,162 @@
+RUNBOOKS
+========
+
+Backend Startup Runbook
+-----------------------
+
+Prerequisites:
+- Python 3.12+ installed
+- Virtual environment created: python -m venv .venv
+- Dependencies installed: pip install -r requirements.txt
+- Environment variables configured in .env file
+
+Step-by-Step Startup:
+1. Navigate to backend directory: cd backend
+2. Activate virtual environment: .\.venv\Scripts\Activate.ps1
+3. Start the server: python main.py
+4. Verify startup by checking for "Application startup complete"
+5. Confirm API is responding: curl http://localhost:8000/health
+6. Check API documentation: http://localhost:8000/docs
+
+Expected Output:
+- "Application startup complete" message in console
+- Server listening on 0.0.0.0:8000
+- Health endpoint returns {"status": "ok"}
+- Swagger UI accessible at /docs endpoint
+
+Frontend Startup Runbook
+------------------------
+
+Prerequisites:
+- Python 3.12+ installed
+- Virtual environment created: python -m venv .venv
+- Dependencies installed: pip install -r requirements.txt
+- .env file configured with BACKEND_URL
+
+Step-by-Step Startup:
+1. Navigate to frontend directory: cd frontend
+2. Activate virtual environment: .\.venv\Scripts\Activate.ps1
+3. Start Streamlit: streamlit run app.py
+4. Access the application at http://localhost:8501
+5. Configure backend URL if needed in the interface
+
+Expected Behavior:
+- Streamlit server starts and opens in browser
+- Chat interface loads with empty message history
+- "Clear Chat History" button available in sidebar
+- Text input field ready for user messages
+
+Chat Interaction Runbook
+------------------------
+
+Standard Chat Flow:
+1. User enters message in the text input field
+2. Press Enter or click Send button
+3. Message is sent to /chat endpoint
+4. Supervisor agent analyzes the message
+5. Appropriate agent (Retrieval/Research/Response) is invoked
+6. Response is returned and displayed in chat
+7. Message and response are added to conversation history
+
+Troubleshooting Chat Issues:
+- If no response is received:
+  a) Check that backend is running (health endpoint)
+  b) Verify network connectivity
+  c) Check backend logs for errors
+  d) Ensure API keys are valid in .env
+
+- If response is slow:
+  a) Check Pinecone index status
+  b) Monitor backend system resources
+  c) Check OpenRouter API status
+  d) Review research iteration count (MAX_RESEARCH_ITERATIONS)
+
+Document Ingestion Runbook
+---------------------------
+
+Adding New Documents:
+1. Place .md or .txt files in backend/data/ directory
+2. Ensure file naming is descriptive
+3. Restart the backend server
+4. Monitor logs for ingestion messages
+5. Test retrieval with relevant queries
+
+Document Processing:
+- Files are automatically detected on startup
+- Large documents are split into 1000-token chunks
+- Overlapping windows (200 tokens) preserve context
+- Chunks are embedded and stored in Pinecone
+
+Verification:
+- Query for content from new documents
+- Verify retrieved chunks contain expected information
+- Check Pinecone index statistics for updated vector count
+
+Environment Variable Configuration Runbook
+-------------------------------------------
+
+Backend .env Setup:
+1. Copy .env.example to .env
+2. Add OPENROUTER_API_KEY from OpenRouter dashboard
+3. Optionally configure CHAT_MODEL (default: openrouter/auto)
+4. Optionally configure EMBEDDING_MODEL (default: openrouter/text-embedding-3-small)
+5. Optionally set MAX_RESEARCH_ITERATIONS (default: 3)
+
+Frontend .env Setup:
+1. Copy .env.example to .env
+2. Set BACKEND_URL to http://localhost:8000 for local development
+3. Update to production URL when deploying
+
+Validation:
+- Backend starts successfully with API key
+- Health endpoint returns status 200
+- Chat endpoint accepts test messages
+- Frontend connects to backend successfully
+
+Error Recovery Runbook
+----------------------
+
+Backend Crashes:
+1. Check error messages in console output
+2. Review logs in backend application directory
+3. Verify all environment variables are set
+4. Check system resources (disk space, memory)
+5. Restart backend with: python main.py
+6. If persistent, review recent code changes
+
+Pinecone Connection Issues:
+1. Verify PINECONE_API_KEY is set
+2. Test connectivity: import pinecone and verify connection
+3. Check Pinecone dashboard for index status
+4. Verify index name matches configuration
+5. Restart backend to reinitialize connection
+
+API Key Issues:
+1. Verify API keys in .env file
+2. Check key expiration in dashboard
+3. Regenerate keys if needed
+4. Restart services after key update
+5. Test endpoints with new keys
+
+Session and History Management Runbook
+---------------------------------------
+
+Clearing Conversation:
+1. Click "Clear Chat History" in Streamlit sidebar
+2. New session ID is automatically generated
+3. Previous conversation history is discarded
+4. Backend thread no longer remembers previous messages
+5. New conversation starts fresh
+
+Session Persistence:
+- Each conversation session has unique thread ID
+- History is stored in LangGraph checkpointer
+- Survives page refresh within same browser session
+- Lost when browser cookies are cleared
+- New session created when clear button is pressed
+
+Monitoring Session Activity:
+1. Check LangGraph thread ID in session state
+2. Monitor checkpoint storage for memory usage
+3. Verify session isolation is working
+4. Test multi-tab conversations for proper isolation

@@ -20,7 +20,7 @@ async def ingest_documents_if_needed() -> None:
         # Check if any documents already exist (simple heuristic)
         try:
             # Try a simple search - if it works, assume docs are already ingested
-            results = vectorstore.similarity_search("test", k=1)
+            results = vectorstore.similarity_search("meeting", k=1)
             if results:
                 logger.info("Documents already ingested into Pinecone; skipping")
                 return
@@ -50,6 +50,7 @@ async def ingest_documents_if_needed() -> None:
                         metadata={
                             "source": file_path.name,
                             "chunk": i,
+                            "type": file_path.name.split("-"),
                         },
                     )
                     all_documents.append(doc)

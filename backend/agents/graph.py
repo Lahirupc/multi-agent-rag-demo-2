@@ -1,5 +1,5 @@
 import logging
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from .state import GraphState
 from .supervisor import supervisor_node, route_after_supervisor
@@ -21,7 +21,7 @@ def build_graph():
     graph.add_node("response", response_node)
 
     # Set entry point
-    graph.set_entry_point("supervisor")
+    graph.add_edge(START, "supervisor")
 
     # Add conditional edges from supervisor
     graph.add_conditional_edges(
