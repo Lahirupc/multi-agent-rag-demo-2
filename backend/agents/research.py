@@ -7,6 +7,8 @@ from .llm import get_chat_model
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_MAX_RESEARCH_ITERATIONS = 3
+
 RESEARCH_REFORMULATE_PROMPT = """You are a research assistant helping to investigate a complex question more deeply.
 
 Given the user's original question and what you've already found, reformulate the query to search for different or more specific aspects.
@@ -22,7 +24,7 @@ Provide a new search query (just the query, no explanation) that explores a diff
 async def research_node(state: GraphState) -> dict:
     """Perform iterative research by reformulating and searching."""
     research_iterations = state.get("research_iterations", 0)
-    max_iterations = state.get("max_research_iterations", 3)
+    research_findings = state.get("research_findings", [])
 
     if not state["messages"]:
         return {
@@ -31,13 +33,13 @@ async def research_node(state: GraphState) -> dict:
         }
 
     # Get the original question (first user message)
-    original_message = None
+    user_message = None
     for msg in state["messages"]:
         if isinstance(msg, HumanMessage):
-            original_message = msg.content
+            user_message = msg.content
             break
 
-    if not original_message:
+    if not user_message:
         return {
             "research_findings": research_findings,
             "research_iterations": research_iterations + 1,
@@ -48,14 +50,14 @@ async def research_node(state: GraphState) -> dict:
     # Determine search query
     if research_iterations == 0:
         # First iteration: use original question
-        search_query = original_message
+        search_query = user_message
     else:
         # Reformulate the query
         chat_model = get_chat_model()
         findings_text = "\n".join(state.get("research_findings", []))
 
         prompt = RESEARCH_REFORMULATE_PROMPT.format(
-            original_question=original_message,
+            original_question=user_message,
             findings=findings_text if findings_text else "None yet",
         )
 
@@ -84,7 +86,7 @@ async def research_node(state: GraphState) -> dict:
 def should_continue_research(state: GraphState) -> Literal["research", "response"]:
     """Determine if research should continue or move to response."""
     research_iterations = state.get("research_iterations", 0)
-    max_iterations = state.get("max_research_iterations", 3)
+    max_iterations = state.get("max_research_iterations", DEFAULT_MAX_RESEARCH_ITERATIONS)
 
     if research_iterations < max_iterations:
         return "research"
