@@ -1,16 +1,8 @@
-import os
 import logging
-from itertools import chain
-from pathlib import Path
-from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from .corpus import load_seed_documents_chunked
 from .vectorstore import get_vectorstore
 
 logger = logging.getLogger(__name__)
-
-DATA_DIR = Path(__file__).parent.parent / "data"
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 200
 
 
 async def ingest_documents_if_needed() -> None:
@@ -29,35 +21,7 @@ async def ingest_documents_if_needed() -> None:
             # If search fails, proceed with ingestion
             pass
 
-        if not DATA_DIR.exists():
-            logger.warning(f"Data directory not found at {DATA_DIR}")
-            return
-
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE,
-            chunk_overlap=CHUNK_OVERLAP,
-        )
-
-        all_documents = []
-        for file_path in chain(DATA_DIR.glob("*.md"), DATA_DIR.glob("*.txt")):
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                chunks = splitter.split_text(content)
-                for i, chunk in enumerate(chunks):
-                    doc = Document(
-                        page_content=chunk,
-                        metadata={
-                            "source": file_path.name,
-                            "chunk": i,
-                            "type": file_path.name.split("-"),
-                        },
-                    )
-                    all_documents.append(doc)
-                logger.info(f"Ingested {len(chunks)} chunks from {file_path.name}")
-            except Exception as e:
-                logger.error(f"Error ingesting {file_path.name}: {e}")
+        all_documents = load_seed_documents_chunked()
 
         if all_documents:
             vectorstore.add_documents(all_documents)

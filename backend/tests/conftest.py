@@ -41,6 +41,12 @@ def fake_vectorstore():
 
     mock_vectorstore.asimilarity_search = async_similarity_search
 
+    # Mock asynchronous search with scores (used by hybrid dense retrieval)
+    async def async_similarity_search_with_score(query, k=4):
+        return [(doc, 1.0 - i * 0.1) for i, doc in enumerate(mock_docs[:k])]
+
+    mock_vectorstore.asimilarity_search_with_score = async_similarity_search_with_score
+
     # Mock add_documents
     mock_vectorstore.add_documents = MagicMock(return_value=None)
 

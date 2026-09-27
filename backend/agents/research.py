@@ -2,7 +2,7 @@ import logging
 from typing import Literal
 from langchain_core.messages import HumanMessage, SystemMessage
 from .state import GraphState
-from .vectorstore import get_vectorstore
+from .hybrid_retrieval import hybrid_search
 from .llm import get_chat_model
 
 logger = logging.getLogger(__name__)
@@ -45,8 +45,6 @@ async def research_node(state: GraphState) -> dict:
             "research_iterations": research_iterations + 1,
         }
 
-    vectorstore = get_vectorstore()
-
     # Determine search query
     if research_iterations == 0:
         # First iteration: use original question
@@ -64,8 +62,8 @@ async def research_node(state: GraphState) -> dict:
         response = await chat_model.ainvoke([SystemMessage(content=prompt)])
         search_query = response.content.strip()
 
-    # Search for documents
-    results = await vectorstore.asimilarity_search(search_query, k=4)
+    # Search for documents via hybrid (dense + sparse) search
+    results = await hybrid_search(search_query, k=4)
 
     # Add findings that aren't already in research_findings
     current_findings = state.get("research_findings", [])
