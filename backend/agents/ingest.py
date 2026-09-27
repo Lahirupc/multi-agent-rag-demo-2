@@ -1,5 +1,6 @@
 import os
 import logging
+from itertools import chain
 from pathlib import Path
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -38,7 +39,7 @@ async def ingest_documents_if_needed() -> None:
         )
 
         all_documents = []
-        for file_path in DATA_DIR.glob("*.md") | DATA_DIR.glob("*.txt"):
+        for file_path in chain(DATA_DIR.glob("*.md"), DATA_DIR.glob("*.txt")):
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
