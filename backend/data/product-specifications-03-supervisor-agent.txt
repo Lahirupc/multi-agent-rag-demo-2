@@ -1,0 +1,30 @@
+PRODUCT SPECIFICATION: SUPERVISOR AGENT
+==========================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-003
+Version: 1.0
+Date: 2026-03-01
+
+Purpose
+The Supervisor Agent is the entry point to the multi-agent workflow. It analyzes each incoming user message and decides which agent should handle the response: Retrieval, Research, or direct Response.
+
+Decision Criteria
+
+The Supervisor Agent uses the following heuristics to route queries:
+- Simple factual questions ("What is X?", "How do you Y?") → Retrieval Agent (single search pass)
+- Complex, multi-part, or open-ended questions ("Compare X and Y", "How would you approach Z?") → Research Agent (iterative search)
+- Greetings, meta-questions, or queries outside the knowledge base scope → Response Agent (direct response without retrieval)
+
+Fallback Behavior
+If the Retrieval or Research agents fail due to provider unavailability (e.g., Pinecone is down), the Supervisor may route to a direct Response Agent path, with a caveat to the user that the answer is not grounded in the knowledge base.
+
+Implementation
+The Supervisor is implemented as a LLM-powered classification agent that reasons about the query structure and complexity to make the routing decision. It does not perform any retrieval itself.
+
+Performance Requirements
+- Routing decision latency: &lt; 500ms
+- Routing accuracy: the correct agent is selected for &gt; 90% of queries (measured via spot checks)
+
+Configuration
+The routing thresholds and decision prompts are centrally managed in the agent's system prompt, allowing adjustments without code changes.

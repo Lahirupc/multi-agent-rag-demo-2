@@ -1,0 +1,33 @@
+POLICY: DOCUMENT MANAGEMENT
+============================
+
+Policy ID: POL-DOC-001
+Effective Date: 2026-01-15
+Owner: Platform Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+This policy governs how internal knowledge base documents used by the Multi-Agent RAG Demo are created, stored, and retired. It ensures that content ingested into Pinecone remains accurate, well-formatted, and traceable to an owner.
+
+Scope
+-----
+Applies to all text-based source documents placed in backend/data/, including policies, runbooks, architecture documents, incident reports, product specifications, and meeting notes.
+
+Policy Statements
+------------------
+1. All internal documents must be maintained in the backend/data/ directory in plain text (.txt) or Markdown (.md) format for compatibility with the ingestion pipeline.
+2. Every document must include a clear title and, where applicable, a document ID, owner, and effective date near the top of the file.
+3. Documents must not exceed roughly 5,000 words; longer topics should be split into multiple focused documents to keep vector chunks coherent.
+4. Superseded documents must be removed from backend/data/ rather than left in place with outdated content, since the ingestion pipeline treats all files in the directory as current.
+5. Any change to a document's content requires a corresponding re-ingestion into Pinecone to keep the vector store in sync with the source of truth.
+6. Document owners are responsible for reviewing their documents at least once per year, or immediately after a significant process or architecture change.
+
+Enforcement
+-----------
+Pull requests that add or modify files under backend/data/ must be reviewed by at least one member of the Platform Engineering Team before merge. Documents that do not follow this policy's formatting conventions will be returned for revision.
+
+Related Documents
+------------------
+- Runbook: Document Re-ingestion Runbook
+- Architecture: Data Ingestion Pipeline Architecture

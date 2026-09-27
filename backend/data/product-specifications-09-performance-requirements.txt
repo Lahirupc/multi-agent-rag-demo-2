@@ -1,0 +1,59 @@
+PRODUCT SPECIFICATION: PERFORMANCE REQUIREMENTS
+==================================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-009
+Version: 1.0
+Date: 2026-03-01
+
+Response Latency
+
+Target Latencies (percentiles):
+- Simple retrieval queries: &lt; 2 seconds (p95)
+- Research queries: &lt; 30 seconds (p95)
+- Health check: &lt; 100ms (p95)
+
+Breakdown by Component:
+- Supervisor routing: &lt; 500ms
+- Retrieval search: &lt; 500ms
+- Research iteration: 3-5 seconds per iteration (including LLM synthesis)
+- Response generation: 5-10 seconds (LLM latency)
+
+Cost Requirements
+
+Per-Request Token Budget:
+- Retrieval query: ~500-1000 tokens (supervisor + response generation)
+- Research query: ~2000-5000 tokens (supervisor + iterations + response generation)
+- Maximum per-request: $0.10 in LLM costs (at typical OpenRouter pricing)
+
+Monthly Budget:
+- Assumed 10,000 queries per month
+- Target: &lt; $500/month in LLM costs
+- Pinecone: &lt; $100/month (serverless pricing)
+
+Throughput
+
+Concurrent Request Handling:
+- Backend should handle 10+ concurrent requests without significant latency degradation
+- Pinecone serverless should handle &gt; 100 queries per second
+
+Resource Utilization
+
+Memory:
+- Backend process baseline: &lt; 500 MB
+- Memory growth should be &lt; 1 MB per concurrent request
+- No unbounded growth over days of operation
+
+CPU:
+- Average CPU utilization &lt; 40% at steady state
+- Spike during LLM requests acceptable
+
+Availability
+
+Uptime Target:
+- 99.5% uptime (SLA compatible with third-party providers' SLAs)
+- Service degrades gracefully when Pinecone or OpenRouter is unavailable, falling back to non-grounded responses
+
+Error Rate:
+- &lt; 1% of requests should result in HTTP 5xx errors during normal operation
+- Errors during provider outages are expected and communicated to users

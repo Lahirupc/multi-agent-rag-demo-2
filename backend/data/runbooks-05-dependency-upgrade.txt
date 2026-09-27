@@ -1,0 +1,26 @@
+RUNBOOK: DEPENDENCY UPGRADE
+==============================
+
+Purpose:
+Provides a safe process for upgrading Python dependencies (LangChain, LangGraph, FastAPI, Streamlit, etc.) without introducing regressions.
+
+Prerequisites:
+- A local development environment with the current dependency set installed
+- Access to run the backend test suite (backend/tests/)
+
+Steps:
+1. Review the changelog of the target package for breaking changes, especially for major version bumps.
+2. Create a new branch for the upgrade.
+3. Update the version constraint in pyproject.toml or requirements.txt for the target package.
+4. Regenerate the lock file: uv lock (backend) or pip freeze > requirements.txt (frontend or pip-based backend).
+5. Reinstall dependencies in a clean virtual environment to confirm the lock file resolves correctly.
+6. Run the backend test suite and manually exercise the /chat and /health endpoints.
+7. Start the frontend and manually verify the chat interface still functions end-to-end against the upgraded backend.
+8. Open a pull request describing the upgrade, the reason, and any behavior changes observed during testing.
+
+Special Considerations:
+- LangGraph or LangChain major version upgrades may change agent state schemas or node APIs; review agent code in backend/agents/ carefully.
+- Streamlit upgrades may change session_state behavior or widget APIs; test the full conversation flow, not just app startup.
+
+Rollback:
+If issues are discovered after merge, revert the dependency version bump commit and redeploy the previous lock file.

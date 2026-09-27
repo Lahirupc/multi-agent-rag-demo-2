@@ -1,0 +1,26 @@
+RUNBOOK: ON-CALL INCIDENT RESPONSE
+=====================================
+
+Purpose:
+Provides the on-call engineer a step-by-step process to triage an alert or user-reported issue with the Multi-Agent RAG Demo.
+
+Immediate Triage Steps:
+1. Check GET /health on the backend to confirm the service process is up.
+2. Check recent backend logs for ERROR-level entries around the time of the reported issue.
+3. Confirm Pinecone and OpenRouter status pages for any ongoing provider incidents.
+4. Reproduce the issue by sending a representative message to /chat directly (e.g., via curl or the /docs Swagger UI).
+
+Common Failure Patterns and First Actions:
+- HTTP 500 with "API key" in the error: verify OPENROUTER_API_KEY is set and valid in the running environment.
+- HTTP 500 with Pinecone-related errors: check Pinecone console for index health and connectivity.
+- Slow /chat responses: check Research Agent iteration counts in logs; an unexpectedly high iteration count may indicate a routing regression.
+- Frontend unable to reach backend: verify BACKEND_URL configuration and CORS allowlist on the backend.
+
+Escalation:
+If the issue cannot be mitigated within 30 minutes for a Critical severity incident, escalate to the Platform Engineering Team lead and open an incident channel per the Incident Response Policy.
+
+Communication:
+Post an initial status update in the incident channel within 15 minutes of detection, and update at least every 30 minutes until resolved.
+
+Post-Incident:
+File an incident report using the standard template and schedule a root cause analysis within five business days.

@@ -1,0 +1,23 @@
+ARCHITECTURE DOCUMENT: DEPLOYMENT AND INFRASTRUCTURE
+=======================================================
+
+Overview
+The system is designed to run as two independently deployable services: the Streamlit frontend and the FastAPI backend, each with its own dependency set and environment configuration.
+
+Local Development
+Both services run as separate local processes: the backend via uvicorn on port 8000, and the frontend via the Streamlit CLI on port 8501. A .env file in each directory configures service-specific settings.
+
+Backend Deployment
+The backend is packaged as a standard Python application managed via uv, and can be containerized using a minimal Python base image. Uvicorn serves the ASGI application, optionally behind a reverse proxy for TLS termination in production.
+
+Frontend Deployment
+The Streamlit frontend can be deployed to any environment capable of running a long-lived Python process, including Streamlit Community Cloud or a container alongside the backend, provided BACKEND_URL is configured to point at the deployed backend's public address.
+
+External Dependencies
+Production deployments depend on two external managed services: Pinecone (vector storage) and OpenRouter (LLM access). Both require network egress from the backend's runtime environment and valid API credentials.
+
+Scaling Strategy
+The backend can be horizontally scaled behind a load balancer since it is stateless between requests (conversation history lives in the frontend's session state). Pinecone serverless scales independently of the application tier.
+
+Observability Hooks
+Deployment infrastructure should expose the /health endpoint to load balancers and uptime monitors as the primary liveness signal for the backend service.

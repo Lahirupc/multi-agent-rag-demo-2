@@ -1,0 +1,35 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0271
+Date: 2026-04-04
+Time: 11:15 UTC
+Severity: High
+Status: Resolved
+Reported By: Monitoring Alert
+
+Incident Summary
+The backend process memory usage grew steadily over 3 days, consuming increasingly more system memory until the process was killed by the OS out-of-memory handler.
+
+Timeline
+11:15 - Memory alerting fired for the backend process exceeding 80% of available memory.
+11:25 - On-call confirmed the backend process was consuming 6+ GB of memory and restarted it as a temporary mitigation.
+11:40 - After restart, memory returned to a baseline of 200 MB; confirmed it was a memory leak, not a configuration issue.
+12:15 - Profiled the backend over the following hour and found memory growing linearly with request count.
+13:00 - Identified a reference cycle in the LangGraph state object that was not being garbage-collected: agent outputs were being accumulated in the state without being pruned.
+13:45 - Implemented a fix to clear unnecessary state fields after each agent handoff, preventing unbounded accumulation.
+14:15 - Redeployed the fix and monitored memory usage for stability over the following 2 hours.
+
+Root Cause
+The LangGraph state object was designed to retain all intermediate outputs (agent reasoning, research findings, etc.) for potential later inspection, but there was no mechanism to remove this data after the final response was sent. Over time and many requests, the in-memory state objects accumulated and were never garbage-collected.
+
+Impact
+After 3 days of normal traffic, the backend process would run out of memory and crash, requiring a manual restart. During the outage, all requests returned no response until the restart completed.
+
+Resolution
+State management was improved to prune large intermediate fields after their use, preventing unbounded growth. A memory profiling test was added to the test suite.
+
+Follow-Up Actions
+1. Add a memory usage alert that triggers before the system runs out of memory, giving operators time to react. (Owner: Platform Engineering Team)
+2. Profile backend memory usage as part of the integration test suite and alert on regressions. (Owner: Backend Team)
+3. Document state management best practices for LangGraph workflows in the Architecture documentation. (Owner: Documentation Team)

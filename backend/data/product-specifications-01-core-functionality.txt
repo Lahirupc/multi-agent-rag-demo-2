@@ -1,0 +1,45 @@
+PRODUCT SPECIFICATION: CORE FUNCTIONALITY
+============================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-001
+Version: 1.0
+Date: 2026-03-01
+
+Overview
+The Multi-Agent RAG Demo is an intelligent document retrieval and question-answering system that combines multiple specialized AI agents with vector-based document search to provide accurate, grounded responses to user queries.
+
+Core Features
+
+1. Intelligent Agent Routing
+   - Supervisor agent analyzes user queries and determines the best response path
+   - Routes to specialized agents based on query type (simple retrieval, iterative research, or direct response)
+   - Improves response accuracy through appropriate agent selection
+   - Supports fallback paths when providers are unavailable
+
+2. Multi-Source Document Retrieval
+   - Vector semantic search across document collection in Pinecone
+   - Retrieval of up to k most relevant document chunks per query
+   - Metadata-based retrieval hints (source filtering, chunk ordering)
+   - Fast sub-second retrieval latency for typical queries
+
+3. Iterative Research Capability
+   - Multi-iteration search refinement with bounded iteration count
+   - Query synthesis and rewriting across iterations to discover related content
+   - Aggregation of findings across iterations into a cohesive research summary
+   - Cost control through configurable iteration caps
+
+4. Grounded Response Generation
+   - Responses cite their source documents explicitly
+   - Clear distinction between grounded and non-grounded content in responses
+   - LLM-assisted response synthesis from retrieved context
+   - Consistent generation parameters for reproducibility
+
+User Interactions
+
+Users interact primarily through a chat interface in the Streamlit frontend, sending natural-language questions and receiving multi-paragraph responses grounded in the knowledge base. The agent activity panel provides transparency into which agent is currently processing the request.
+
+Quality Metrics
+- Response latency: target &lt; 5 seconds for 95th percentile
+- Retrieval accuracy: documents returned should contain relevant context for the user's query
+- Grounding rate: &gt; 95% of responses should cite retrieved documents

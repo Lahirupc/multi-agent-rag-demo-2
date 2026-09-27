@@ -1,0 +1,35 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0247
+Date: 2026-03-22
+Time: 15:33 UTC
+Severity: High
+Status: Resolved
+Reported By: User Feedback
+
+Incident Summary
+The Supervisor Agent began incorrectly routing all queries to the Research Agent, even simple factual questions that should have been routed to the Retrieval Agent, causing unnecessary latency and increased LLM costs.
+
+Timeline
+15:33 - Users reported unusually slow response times on simple queries.
+15:50 - On-call confirmed that all /chat requests were taking 2-3x longer than typical.
+16:05 - Examined Research Agent logs and found an unusually high iteration count across all queries, confirming over-routing.
+16:20 - Traced the issue to a recent change in the Supervisor Agent's routing logic.
+16:40 - Identified a logic error in the condition that decides between Retrieval and Research paths: the condition was reversed.
+17:00 - Reverted the problematic commit and redeployed.
+17:15 - Confirmed response latency returned to baseline.
+
+Root Cause
+A code review oversight; a logical AND was used where a logical OR should have been used (or vice versa), causing the Supervisor Agent's routing decision to be inverted. All "simple" queries were now being routed to the expensive Research path.
+
+Impact
+Approximately 4 hours of degraded performance with elevated latency and LLM costs. Queries that should have completed in under 2 seconds were taking 5-10 seconds. Estimated cost impact: $45 in unnecessary LLM token usage.
+
+Resolution
+The problematic commit was reverted. The correct logic was re-implemented and merged after code review.
+
+Follow-Up Actions
+1. Add a unit test that exercises both simple and complex routing paths to catch similar regressions. (Owner: Backend Team)
+2. Establish a code review focus area for agent routing logic, flagging any routing-related changes for especially close scrutiny. (Owner: Engineering Team)
+3. Add latency-based alerting for the Research Agent to catch future over-routing issues faster. (Owner: Platform Engineering Team)

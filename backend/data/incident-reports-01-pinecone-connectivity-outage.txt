@@ -1,0 +1,34 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0142
+Date: 2026-02-03
+Time: 14:12 UTC
+Severity: Critical
+Status: Resolved
+Reported By: On-call Engineer
+
+Incident Summary
+All /chat requests began failing with HTTP 500 errors due to the backend being unable to reach the Pinecone index.
+
+Timeline
+14:12 - Alerting fired for elevated 500 error rate on /chat.
+14:15 - On-call engineer confirmed GET /health was returning healthy, isolating the issue to retrieval.
+14:20 - Backend logs showed repeated connection timeout errors from the Pinecone client.
+14:25 - Pinecone status page confirmed a regional outage affecting the index's cloud region.
+15:05 - Pinecone status page reported the regional issue resolved.
+15:10 - Backend automatically recovered; /chat requests returned to normal success rates.
+
+Root Cause
+A regional outage on Pinecone's infrastructure made the vector index unreachable, causing all retrieval-dependent agent paths to fail.
+
+Impact
+Approximately 53 minutes of degraded service; all /chat requests requiring retrieval returned HTTP 500 errors. Simple queries that could bypass retrieval were also affected because the Supervisor Agent did not have a fallback path.
+
+Resolution
+Service recovered automatically once the Pinecone regional outage was resolved by the vendor; no code deployment was required.
+
+Follow-Up Actions
+1. Implement a fallback path in the Supervisor Agent to answer without retrieval when Pinecone is unreachable, with a caveat noted to the user. (Owner: Backend Team)
+2. Add a dedicated alert for Pinecone client errors distinct from generic 500 errors. (Owner: Platform Engineering Team)
+3. Subscribe the on-call rotation to Pinecone's status page notifications. (Owner: Platform Engineering Team)

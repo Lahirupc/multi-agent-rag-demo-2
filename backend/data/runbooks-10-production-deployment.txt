@@ -1,0 +1,28 @@
+RUNBOOK: PRODUCTION DEPLOYMENT
+=================================
+
+Purpose:
+Describes the standard process for deploying a reviewed and merged change to production for either the backend or frontend service.
+
+Prerequisites:
+- Change has passed code review and CI checks per the Code Review Policy.
+- Deployment follows the Change Management Policy, including rollback readiness.
+
+Backend Deployment Steps:
+1. Confirm the target commit on main has passed all CI checks, including the backend test suite.
+2. Record the commit hash in the deployment log before proceeding.
+3. Deploy the backend using the standard deployment pipeline (container build and rollout, or platform-specific deploy command).
+4. After rollout, verify GET /health returns a healthy status from the production endpoint.
+5. Run a smoke test against /chat with a representative production-safe query.
+6. Monitor error rates, latency, and log output for at least 15 minutes post-deployment.
+
+Frontend Deployment Steps:
+1. Confirm the target commit on main has passed CI checks.
+2. Deploy the Streamlit frontend using the standard deployment pipeline, confirming BACKEND_URL is set to the production backend address.
+3. Manually verify the chat interface loads and successfully completes a full conversation round-trip.
+
+Rollback Trigger Conditions:
+If error rates exceed baseline by a significant margin, or the smoke test fails, follow the Rollback Deployment Runbook immediately rather than attempting to debug in production.
+
+Post-Deployment:
+Update the deployment log with the outcome, and notify the team in the standard deployment channel that the release is live and stable.

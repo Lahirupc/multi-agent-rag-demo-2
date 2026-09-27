@@ -1,0 +1,30 @@
+RUNBOOK: BACKEND STARTUP
+==========================
+
+Prerequisites:
+- Python 3.12+ installed
+- Virtual environment created: python -m venv .venv
+- Dependencies installed: pip install -r requirements.txt (or uv pip install -r requirements.txt)
+- Environment variables configured in backend/.env, including OPENROUTER_API_KEY and Pinecone credentials
+
+Step-by-Step Startup:
+1. Navigate to backend directory: cd backend
+2. Activate virtual environment: .\.venv\Scripts\Activate.ps1
+3. Start the server: python main.py
+4. Verify startup by checking for "Application startup complete" in the console.
+5. Confirm API is responding: curl http://localhost:8000/health
+6. Check API documentation: http://localhost:8000/docs
+
+Expected Output:
+- "Application startup complete" message in console
+- Server listening on 0.0.0.0:8000
+- Health endpoint returns {"status": "ok"}
+- Swagger UI accessible at /docs endpoint
+
+Troubleshooting:
+- If startup fails with a missing API key error, verify OPENROUTER_API_KEY is set in backend/.env.
+- If Pinecone connection errors appear, verify the Pinecone API key and index name are correct.
+- If the port is already in use, stop the conflicting process or start uvicorn on a different port with --port.
+
+Alternative Startup (uvicorn directly):
+uvicorn main:app --reload --host 0.0.0.0 --port 8000

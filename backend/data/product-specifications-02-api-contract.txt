@@ -1,0 +1,54 @@
+PRODUCT SPECIFICATION: API CONTRACT AND INTEGRATION
+======================================================
+
+Product: Multi-Agent RAG Demo Backend
+Specification ID: SPEC-002
+Version: 1.1
+Date: 2026-03-01
+
+HTTP Endpoints
+
+POST /chat
+Purpose: Process a user message and return an assistant response
+Request Body:
+{
+  "message": "string (non-empty user input, max 10000 characters)"
+}
+
+Response (HTTP 200):
+{
+  "response": "string (assistant response, typically 200-1000 words)",
+  "status": "success"
+}
+
+Response (HTTP 400):
+{
+  "detail": "message (error description, e.g., 'Empty message')"
+}
+
+Response (HTTP 500):
+{
+  "detail": "string (server error description, e.g., 'API key not configured')"
+}
+
+GET /health
+Purpose: Check service health and readiness
+Response (HTTP 200):
+{
+  "status": "ok"
+}
+
+Behavior Specifications
+
+- Empty or whitespace-only messages return HTTP 400.
+- Missing or invalid API keys return HTTP 500 at startup; requests fail immediately with a descriptive error.
+- Provider outages (Pinecone, OpenRouter) result in HTTP 500 with a provider-specific error message.
+- Request timeouts (if triggered) return HTTP 500 with a timeout message.
+- Conversation history is maintained client-side; the API treats each /chat call independently.
+
+Rate Limiting
+- The frontend may cache results of identical queries, but the API enforces no per-user limits.
+- Deployment infrastructure may add rate limiting upstream; current limits are not baked into the API.
+
+Versioning
+The API is currently unversioned. Future breaking changes will introduce a /v2/chat endpoint rather than modifying the existing endpoint's contract.

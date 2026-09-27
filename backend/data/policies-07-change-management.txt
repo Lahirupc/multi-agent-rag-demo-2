@@ -1,0 +1,34 @@
+POLICY: CHANGE MANAGEMENT
+============================
+
+Policy ID: POL-OPS-007
+Effective Date: 2026-03-01
+Owner: Platform Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+Controls how changes are planned, tested, and released to the Multi-Agent RAG Demo to minimize the risk of regressions in production.
+
+Scope
+-----
+Applies to backend code, frontend code, agent prompts, model configuration, and infrastructure changes.
+
+Policy Statements
+------------------
+1. All changes must go through pull request review as defined in the Code Review Policy before being merged to main.
+2. Changes to LLM model selection, temperature, or other generation parameters must be tested against a representative set of sample queries before release.
+3. Infrastructure or dependency upgrades (e.g., LangChain, LangGraph, FastAPI major versions) require a changelog review and a staging environment test pass.
+4. Emergency changes (hotfixes) may bypass the standard release cadence but must still receive at least one review, even if performed after deployment.
+5. Every deployment must be traceable to a specific commit hash and recorded in the deployment log.
+6. Rollback procedures must be identified before any change that modifies the vector store schema or metadata structure.
+7. Feature flags should be used for user-facing changes where feasible to allow gradual rollout.
+
+Enforcement
+-----------
+The Platform Engineering Team audits deployment logs monthly to confirm all production changes followed this process.
+
+Related Documents
+------------------
+- Runbook: Production Deployment Runbook
+- Runbook: Rollback Deployment Runbook

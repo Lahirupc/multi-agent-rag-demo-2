@@ -1,0 +1,34 @@
+POLICY: ACCESS CONTROL AND AUTHENTICATION
+============================================
+
+Policy ID: POL-SEC-005
+Effective Date: 2026-02-01
+Owner: Security Team
+Review Cycle: Semi-Annual
+
+Purpose
+-------
+Defines who may access the backend API, the Pinecone index, and the OpenRouter account used by the Multi-Agent RAG Demo, and under what conditions.
+
+Scope
+-----
+Applies to human users, service accounts, and CI/CD pipelines that interact with any part of the system.
+
+Policy Statements
+------------------
+1. Access to production API keys (OPENROUTER_API_KEY, Pinecone API key) is restricted to members of the Platform Engineering Team and is never committed to source control.
+2. Local development uses .env files excluded from git via .gitignore; example values are provided only in .env.example files.
+3. Production credentials must be stored in a secrets manager or CI/CD secret store, not in plaintext configuration files.
+4. Access to the Pinecone console is granted on a least-privilege basis and reviewed quarterly.
+5. Service accounts used by automated ingestion jobs must be scoped to the minimum permissions required to read and write the target index.
+6. Any employee leaving the team or organization must have their access to production credentials revoked within one business day.
+7. Multi-factor authentication is required for all accounts with access to the OpenRouter billing dashboard and the Pinecone console.
+
+Enforcement
+-----------
+Access reviews are conducted quarterly by the Security Team. Unauthorized access attempts are handled per the Incident Response Policy.
+
+Related Documents
+------------------
+- Policy: Environment and Secrets Management Policy
+- Policy: Incident Response Policy

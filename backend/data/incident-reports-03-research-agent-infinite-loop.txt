@@ -1,0 +1,34 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0173
+Date: 2026-02-18
+Time: 11:47 UTC
+Severity: High
+Status: Resolved
+Reported By: User Report
+
+Incident Summary
+The Research Agent entered what appeared to be an infinite or excessively long loop on a specific user query, causing the /chat endpoint to hang for over 5 minutes before timing out.
+
+Timeline
+11:47 - User reported a request that "never returned".
+11:50 - On-call confirmed the /chat endpoint was hanging on that specific query.
+12:05 - Examined backend logs and found the Research Agent had exceeded the defined maximum iteration count without being stopped.
+12:15 - Identified the root cause: a recent refactoring forgot to initialize the iteration counter variable, causing the loop guard to never trigger.
+12:35 - Hotfix deployed adding back the counter initialization.
+12:40 - Smoke test confirmed the problematic query now completes normally in under 5 seconds.
+
+Root Cause
+During a code refactor to the Research Agent, the iteration counter was accidentally removed during a cleanup pass, breaking the termination condition. The loop guard code still existed, but it was comparing against an undefined variable, which defaulted to None and never triggered the exit condition.
+
+Impact
+Any user query routed to the Research Agent became hung for the duration of the backend's request timeout (approximately 5 minutes), after which they received a timeout error. Estimated impact: 12 requests affected before the issue was discovered.
+
+Resolution
+A one-line fix added the counter initialization back. The fix was deployed as a hotfix to production.
+
+Follow-Up Actions
+1. Add a unit test that exercises the Research Agent loop guard and ensures iterations are capped. (Owner: Backend Team)
+2. Establish a code review checklist item for loop guards and termination conditions. (Owner: Engineering Team)
+3. Review other agents for similar counter or termination logic issues. (Owner: Backend Team)

@@ -1,0 +1,34 @@
+POLICY: DATA HANDLING AND PRIVACY
+===================================
+
+Policy ID: POL-DATA-003
+Effective Date: 2026-01-15
+Owner: Platform Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+Establishes minimum standards for handling user chat messages, retrieved documents, and any personal information that flows through the Multi-Agent RAG Demo.
+
+Scope
+-----
+Applies to data at rest in Pinecone, data in transit between frontend and backend, and any logs or telemetry captured by the system.
+
+Policy Statements
+------------------
+1. All sensitive data stored in the vector database or application logs must be encrypted at rest using the storage provider's default encryption.
+2. Personal information submitted by users in chat messages must be handled according to applicable privacy regulations and must not be used for any purpose beyond generating a response.
+3. Document access and ingestion actions must be logged and auditable, including which documents were added, updated, or removed from the knowledge base.
+4. Data retention periods are defined by document type: conversational logs are retained for 30 days, ingested knowledge base documents are retained until explicitly superseded.
+5. Users must not paste secrets, credentials, or regulated personal data (e.g., government ID numbers) into the chat interface; the frontend should display a reminder of this policy.
+6. Any data export requested for debugging must be scrubbed of personally identifiable information before being shared outside the immediate engineering team.
+7. Third-party LLM providers (via OpenRouter) receive only the minimum context required to answer a query; unrelated conversation history is not forwarded when avoidable.
+
+Enforcement
+-----------
+Data handling practices are reviewed as part of the quarterly security review. Any suspected data exposure must be reported immediately per the Incident Response Policy.
+
+Related Documents
+------------------
+- Policy: Incident Response Policy
+- Architecture: Security Architecture

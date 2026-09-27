@@ -1,0 +1,27 @@
+RUNBOOK: PINECONE INDEX SETUP AND RESET
+==========================================
+
+Prerequisites:
+- Pinecone account and API key
+- Access to the Pinecone console or CLI
+- Knowledge of the embedding model's output dimensionality used by the backend
+
+Creating a New Index:
+1. Log in to the Pinecone console.
+2. Create a new serverless index, specifying the correct vector dimension to match the embedding model in use.
+3. Choose the appropriate cloud region to minimize latency from the backend's deployment region.
+4. Record the index name and update the backend's .env file with the corresponding configuration value.
+5. Restart the backend so it initializes the vectorstore client against the new index.
+
+Resetting an Existing Index (clearing all vectors):
+1. Confirm with the team before proceeding, as this action is destructive and cannot be undone.
+2. In the Pinecone console, select the target index and use the "Delete all vectors" action, or delete and recreate the index entirely.
+3. Restart the backend so the idempotent ingestion check no longer finds existing documents and re-ingests the seed data from backend/data/.
+4. Verify ingestion completed by checking backend logs for "Ingested N total chunks into Pinecone".
+
+Verification:
+- Run a test query through the /chat endpoint and confirm the response references expected knowledge base content.
+- Use the Pinecone console's index stats view to confirm the expected vector count.
+
+Rollback:
+If a reset was performed in error and no backup exists, documents must be re-ingested from the current backend/data/ contents; there is no automatic backup of previously ingested vectors.

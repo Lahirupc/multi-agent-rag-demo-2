@@ -1,0 +1,28 @@
+ARCHITECTURE DOCUMENT: BACKEND (FASTAPI) ARCHITECTURE
+========================================================
+
+Overview
+The backend is a FastAPI application (backend/main.py) that exposes the HTTP API consumed by the frontend and hosts the LangGraph multi-agent orchestration.
+
+Endpoints
+- GET /health: a lightweight liveness check returning service status.
+- POST /chat: accepts a JSON body with a "message" field and returns the assistant's response along with a status field.
+
+Application Startup
+On startup, the backend initializes the Pinecone vectorstore client and triggers the idempotent document ingestion routine, which loads any seed documents from backend/data/ that have not yet been indexed.
+
+Request Lifecycle
+1. A request arrives at /chat with the user's message.
+2. The message is validated (empty messages return HTTP 400).
+3. The message is passed into the LangGraph multi-agent workflow.
+4. The workflow's final Response Agent output is returned as the API response.
+5. Errors during processing (e.g., missing API key, LLM provider failure) return HTTP 500 with a descriptive error detail.
+
+CORS Configuration
+CORS middleware is configured to allow requests from the local Streamlit frontend (localhost:8501) and a secondary development origin (localhost:3000), and should be updated whenever the frontend is deployed to a new origin.
+
+Async Design
+FastAPI's async request handling allows the backend to serve health checks and other lightweight requests without being blocked by in-flight LLM calls from concurrent /chat requests.
+
+Dependency Management
+Backend dependencies are managed with uv and pinned in uv.lock, ensuring reproducible builds across development and production environments.

@@ -1,0 +1,26 @@
+ARCHITECTURE DOCUMENT: FRONTEND (STREAMLIT) ARCHITECTURE
+===========================================================
+
+Overview
+The frontend is a single-page Streamlit application (frontend/app.py) that provides a chat interface for interacting with the backend's multi-agent RAG system.
+
+Key Responsibilities
+- Render the conversation history and accept new user input.
+- Send user messages to the backend's /chat endpoint over HTTP.
+- Display the assistant's response, including any agent activity updates.
+- Maintain conversation history in Streamlit's session_state for the duration of the browser session.
+
+Session State Management
+Because Streamlit reruns the script on every interaction, all conversation history is stored in st.session_state rather than local variables. This state is in-memory only and resets when the page is refreshed or the session ends.
+
+Agent Activity Panel
+A dedicated panel streams real-time updates about which agent (Supervisor, Retrieval, Research, or Response) is currently processing the request, giving users visibility into the multi-agent reasoning process as it happens.
+
+Configuration
+The frontend reads BACKEND_URL from its .env file to know where to send requests, allowing the same frontend code to point at local, staging, or production backends without code changes.
+
+Error Handling
+Network failures or non-200 responses from the backend are caught and displayed to the user as a friendly error message rather than a raw stack trace, preserving the existing conversation history.
+
+Deployment Model
+The frontend runs as a standalone Streamlit process, typically on port 8501, and communicates with the backend exclusively through the documented HTTP API contract.

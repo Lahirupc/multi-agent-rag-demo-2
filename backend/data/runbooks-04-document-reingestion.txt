@@ -1,0 +1,27 @@
+RUNBOOK: DOCUMENT RE-INGESTION
+=================================
+
+Purpose:
+Use this runbook when new or updated documents have been added to backend/data/ and need to be indexed into Pinecone, since the ingestion pipeline's idempotency check skips ingestion if any documents already exist in the index.
+
+Prerequisites:
+- Updated or new .txt/.md files placed directly in backend/data/
+- Access to the Pinecone console or API to clear existing vectors if a full re-ingestion is required
+
+Steps for Adding New Documents (when index is empty or new):
+1. Place new document files directly in backend/data/ (not in subdirectories, as ingestion is non-recursive).
+2. Start or restart the backend: python main.py
+3. Check backend logs for "Ingested N chunks from <filename>" for each new file.
+4. Confirm total chunk count matches expectations in the "Ingested N total chunks into Pinecone" log line.
+
+Steps for Forcing Full Re-ingestion (when index already has content):
+1. Follow the Pinecone Index Setup and Reset runbook to clear existing vectors.
+2. Restart the backend to trigger a fresh ingestion pass across all current files in backend/data/.
+3. Verify via logs and a test query that the updated content is retrievable.
+
+Verification:
+- Query the /chat endpoint with a question specific to the newly added document and confirm the response reflects the new content.
+- Check Pinecone index stats to confirm the vector count increased as expected.
+
+Notes:
+- Removing a file from backend/data/ does not automatically remove its vectors from Pinecone; a full re-ingestion is required to fully synchronize the index with the current file set.

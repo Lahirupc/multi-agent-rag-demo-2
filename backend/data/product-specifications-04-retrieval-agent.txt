@@ -1,0 +1,38 @@
+PRODUCT SPECIFICATION: RETRIEVAL AGENT
+=========================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-004
+Version: 1.0
+Date: 2026-03-01
+
+Purpose
+The Retrieval Agent performs a single vector similarity search against the Pinecone index to find the most relevant document chunks for a user's query.
+
+Behavior
+
+Input: user's original query
+Process:
+1. Embed the query using the configured embedding model
+2. Search Pinecone for the top-k most similar vectors (k typically 5-10)
+3. Return the retrieved chunks and their metadata (source document, relevance score)
+
+Output: list of retrieved document chunks with metadata
+
+Key Characteristics
+- Single-pass: the Retrieval Agent does not refine or iterate; it performs one search and returns results immediately
+- Non-generative: it returns raw document chunks, not synthesized answers
+- Fast: typical retrieval latency is &lt; 500ms, making it suitable for simple factual queries
+
+Configuration Parameters
+- k (number of results): typically 5-10; higher values increase comprehensiveness but latency
+- Embedding model: currently using OpenAI's default embedding model via LangChain
+- Similarity threshold: results below a certain similarity score may be filtered to avoid low-quality matches
+
+Performance Requirements
+- Latency: &lt; 500ms for 95th percentile
+- Recall: relevant documents should appear in the top-k results for &gt; 90% of queries
+- Precision: most returned chunks should be genuinely relevant to the query
+
+Next Step
+Results are passed to the Response Agent, which synthesizes them into a natural-language answer.

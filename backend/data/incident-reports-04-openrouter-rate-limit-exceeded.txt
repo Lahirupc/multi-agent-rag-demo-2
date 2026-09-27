@@ -1,0 +1,34 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0189
+Date: 2026-02-25
+Time: 16:22 UTC
+Severity: Medium
+Status: Resolved
+Reported By: Monitoring Alert
+
+Incident Summary
+OpenRouter rate limits were exceeded, causing some /chat requests to return HTTP 500 errors with rate-limit-exceeded error messages from the LLM provider.
+
+Timeline
+16:22 - Rate limiting alert fired for OpenRouter provider errors.
+16:25 - On-call confirmed elevated error rate on /chat, with errors referencing "rate limit".
+16:35 - Reviewed OpenRouter console and found account was hitting rate limits despite having a reasonable budget remaining.
+16:50 - Identified cause: a spike in Research Agent iteration counts (some queries running max iterations) combined with normal traffic led to token consumption exceeding the concurrent-request or per-minute limits.
+17:15 - Traffic naturally declined post-spike; rate limiting ceased.
+17:30 - Confirmed error rate returned to normal.
+
+Root Cause
+OpenRouter enforces both per-minute and concurrent-request limits. A series of complex queries each running the maximum number of Research Agent iterations consumed tokens faster than anticipated, triggering the per-minute rate limit. No configuration was misconfigured; it was a natural traffic spike combined with expensive queries.
+
+Impact
+Approximately 18 requests returned HTTP 500 errors over a 13-minute window, representing roughly 8% of traffic during the peak. Queries routed to the Retrieval Agent with fewer iterations recovered immediately; only Research Agent queries were significantly affected.
+
+Resolution
+No code change was required. Traffic naturally declined, rate limiting ceased, and requests recovered. OpenRouter's rate-limit-exceeded error was properly returned as HTTP 500 with a descriptive message.
+
+Follow-Up Actions
+1. Implement request queuing or backpressure to smooth bursty traffic patterns before they hit provider limits. (Owner: Backend Team)
+2. Add detailed per-provider rate-limit monitoring and alerting. (Owner: Platform Engineering Team)
+3. Review Research Agent iteration cost and consider reducing max iterations or adding a user-facing warning for expensive queries. (Owner: Backend Team)

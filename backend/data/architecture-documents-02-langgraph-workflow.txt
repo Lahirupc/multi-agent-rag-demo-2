@@ -1,0 +1,26 @@
+ARCHITECTURE DOCUMENT: LANGGRAPH MULTI-AGENT WORKFLOW
+========================================================
+
+Overview
+The multi-agent workflow is implemented as a LangGraph state graph, where each agent is a node and edges define the possible transitions between them based on the current state.
+
+Graph Nodes
+1. Supervisor - the entry point; classifies the incoming query and decides the next node.
+2. Retrieval - performs a single vector search against Pinecone and returns top-k chunks.
+3. Research - performs iterative retrieval and synthesis, refining the query across multiple passes.
+4. Response - composes the final natural-language answer from the accumulated context.
+
+State Object
+The graph state carries the original user message, the conversation history, retrieved documents, research findings accumulated across iterations, and a counter tracking the number of research iterations performed.
+
+Routing Logic
+The Supervisor Agent inspects the user's message and decides whether it can be answered directly, requires a single retrieval pass, or requires the deeper iterative research path. Simple factual questions are routed to Retrieval; open-ended or multi-part questions are routed to Research.
+
+Iteration Control
+The Research node re-enters itself up to a fixed maximum number of iterations (defined as a constant in code) before being forced to hand off to the Response node. This prevents runaway loops and bounds both latency and LLM cost per request.
+
+Termination
+Every path through the graph terminates at the Response node, which is responsible for producing the final answer returned to the FastAPI /chat endpoint.
+
+Extensibility
+New agents (for example, a validation or fact-checking agent) can be added as additional nodes with new edges from the Supervisor or Response nodes, without requiring changes to the existing agents' internal logic.

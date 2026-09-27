@@ -1,0 +1,23 @@
+ARCHITECTURE DOCUMENT: SECURITY ARCHITECTURE
+================================================
+
+Overview
+Security for the Multi-Agent RAG Demo centers on protecting API credentials, restricting cross-origin access, and preventing sensitive data from leaking through logs or LLM prompts.
+
+Credential Protection
+The OPENROUTER_API_KEY and any Pinecone credentials are supplied exclusively via environment variables, never hard-coded, and excluded from version control through .gitignore. Production deployments source these values from a secrets manager.
+
+Network Boundaries
+CORS middleware on the backend restricts which origins may call the API from a browser context, currently limited to the local frontend's development origins. Production deployments must update this allowlist to match the actual frontend domain.
+
+Input Validation
+The /chat endpoint validates that the incoming message is non-empty before processing, returning HTTP 400 for invalid input. Further validation (message length limits, basic content filtering) is a recommended future enhancement.
+
+Prompt Injection Considerations
+Because retrieved document content is inserted into LLM prompts, the system should be resilient to documents in the knowledge base containing instructions intended to manipulate agent behavior. Ingested content is treated as data, not instructions, when constructing prompts.
+
+Data Exposure Risks
+Logs must avoid capturing full user messages or retrieved document content at INFO level in production to reduce the risk of sensitive data exposure through log aggregation systems.
+
+Dependency Security
+Backend and frontend dependencies are pinned via lock files (uv.lock, requirements.txt) and should be periodically scanned for known vulnerabilities as part of the change management process.

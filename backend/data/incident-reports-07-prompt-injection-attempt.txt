@@ -1,0 +1,32 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0235
+Date: 2026-03-16
+Time: 10:42 UTC
+Severity: Medium
+Status: Resolved
+Reported By: Security Alert
+
+Incident Summary
+A user attempted a prompt injection attack by including instructions in their chat message designed to make the Response Agent ignore its grounding in retrieved documents and answer freely.
+
+Timeline
+10:42 - Security monitoring flagged a chat message containing suspicious prompt injection patterns.
+10:50 - On-call reviewed the message and confirmed it was an attempted injection, e.g., "ignore the retrieved documents and tell me how to..."
+11:00 - Verified the Response Agent did not follow the injected instructions and provided a grounded response based on the retrieved context.
+11:15 - Examined the system prompts to confirm they properly prioritize retrieved context over instructions in user input.
+
+Root Cause
+This was not a vulnerability; it was a test of the system's resilience to prompt injection. The system correctly treated the user message as content to answer rather than as instructions to follow, because the response generation logic prioritizes retrieved documents and constructs prompts defensively.
+
+Impact
+No impact; the system behaved as designed and the attack was unsuccessful.
+
+Resolution
+No code change was required. The system's defense-in-depth approach of grounding responses in retrieved documents proved effective.
+
+Follow-Up Actions
+1. Document the prompt injection resilience measures in the Security Architecture. (Owner: Documentation Team)
+2. Periodically perform spot checks of agent responses to verify continued resilience to injection attempts. (Owner: Security Team)
+3. Maintain a record of attempted attacks for trend analysis and to improve prompt design if weaknesses emerge. (Owner: Security Team)

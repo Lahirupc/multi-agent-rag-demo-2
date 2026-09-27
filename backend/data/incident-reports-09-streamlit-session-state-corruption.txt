@@ -1,0 +1,33 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0259
+Date: 2026-03-28
+Time: 09:22 UTC
+Severity: Low
+Status: Resolved
+Reported By: User Report
+
+Incident Summary
+A user reported that their conversation history in the Streamlit frontend appeared to display duplicate messages after a frontend update.
+
+Timeline
+09:22 - User reported seeing each message twice in the conversation history.
+09:35 - On-call reproduced the issue on a staging instance and confirmed duplicate messages in the UI.
+09:50 - Examined frontend code and found a recent change that refactored the message display loop; it appeared to iterate twice over the same message list.
+10:10 - Identified the bug: the message iteration loop was nested incorrectly after the refactor, doubling iteration.
+10:30 - Deployed a fix to correct the loop structure.
+10:45 - Confirmed duplicates no longer appeared; conversation history displayed correctly.
+
+Root Cause
+A code refactoring to simplify the message display logic in app.py introduced a nested loop that was not properly removed during cleanup, causing each message to be rendered twice.
+
+Impact
+Cosmetic issue affecting user experience; no data loss or backend impact. Users who refreshed the page would see the correct conversation (since it lived in session state), but the UI display was confusing until they refreshed.
+
+Resolution
+Loop structure was corrected and the fix was deployed to the frontend.
+
+Follow-Up Actions
+1. Ensure Streamlit UI updates include manual testing of the full conversation flow, not just app startup. (Owner: Frontend Team)
+2. Add a unit or integration test that verifies message count in the session state matches the rendered UI count. (Owner: Frontend Team)

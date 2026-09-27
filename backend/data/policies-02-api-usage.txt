@@ -1,0 +1,34 @@
+POLICY: API USAGE
+==================
+
+Policy ID: POL-API-002
+Effective Date: 2026-01-15
+Owner: Backend Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+Defines the rules for consuming and exposing the FastAPI backend's HTTP endpoints, including the /chat and /health routes, to protect system stability and data integrity.
+
+Scope
+-----
+Applies to all internal services, the Streamlit frontend, and any third-party integrations that call the backend API.
+
+Policy Statements
+------------------
+1. All API calls must be authenticated with valid credentials once authentication is enabled; unauthenticated access is only permitted in local development.
+2. Rate limiting is enforced at 100 requests per minute per client IP for the /chat endpoint to prevent abuse and control LLM provider costs.
+3. API errors must be logged server-side with sufficient context (timestamp, endpoint, status code) for audit and debugging purposes, without logging full message bodies that may contain sensitive data.
+4. Consumers must handle HTTP 400 (empty message) and HTTP 500 (processing or configuration error) responses gracefully and must not retry 400 errors without correcting the request.
+5. All API integrations, including the frontend-to-backend connection, must use HTTPS/TLS in any non-local environment.
+6. New endpoints must be documented in the OpenAPI schema (available at /docs) before being released to any consumer outside the core team.
+7. Breaking changes to the request or response contract require a version bump and a deprecation notice of at least two weeks.
+
+Enforcement
+-----------
+API changes are reviewed against this policy during code review. Violations discovered in production (e.g., missing rate limiting on a new route) are treated as a defect and prioritized for the next release.
+
+Related Documents
+------------------
+- Architecture: Backend (FastAPI) Architecture
+- Product Specification: API Contract and Integration Specification

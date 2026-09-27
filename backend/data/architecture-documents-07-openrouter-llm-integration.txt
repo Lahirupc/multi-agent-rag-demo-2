@@ -1,0 +1,25 @@
+ARCHITECTURE DOCUMENT: LLM PROVIDER (OPENROUTER) INTEGRATION
+================================================================
+
+Overview
+The backend uses OpenRouter as an abstraction layer over multiple underlying LLM providers, accessed through LangChain (backend/agents/llm.py).
+
+Why OpenRouter
+OpenRouter allows the system to switch between underlying models without changing application code, using a single API key and a consistent request format. The default model configuration ("openrouter/auto") lets OpenRouter select a suitable model per request.
+
+Configuration
+The OpenRouter API key is supplied via the OPENROUTER_API_KEY environment variable and must never be committed to source control. Model parameters such as temperature are configured centrally in backend/agents/llm.py so all agents share consistent generation behavior unless explicitly overridden.
+
+Usage Across Agents
+- The Supervisor Agent uses a low-temperature configuration for consistent routing decisions.
+- The Research Agent may use a moderate temperature to encourage exploration across iterations.
+- The Response Agent balances temperature to produce fluent, grounded answers without excessive creativity.
+
+Error Handling
+Missing or invalid API keys result in an HTTP 500 response from /chat with a descriptive error message. Transient provider errors (timeouts, rate limits) should be retried with backoff before surfacing an error to the user.
+
+Cost Considerations
+Because OpenRouter bills per token across the underlying provider, the Research Agent's iteration cap directly bounds the token cost of a single user request, and is a key lever for controlling operating expenses.
+
+Future Direction
+The abstraction layer makes it straightforward to add model fallback chains (e.g., falling back to a secondary model if the primary is unavailable) without changing agent logic.

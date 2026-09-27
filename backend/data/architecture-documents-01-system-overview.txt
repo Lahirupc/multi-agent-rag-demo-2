@@ -1,0 +1,43 @@
+ARCHITECTURE DOCUMENT: SYSTEM OVERVIEW
+=========================================
+
+Multi-Agent RAG Demo Project Architecture
+------------------------------------------
+
+System Overview
+The system is a multi-agent Retrieval-Augmented Generation (RAG) system built with LangGraph and FastAPI. It combines a Streamlit frontend with a backend that uses multiple specialized agents to answer user queries grounded in a document knowledge base stored in Pinecone.
+
+Monorepo Structure
+The repository uses a monorepo with two main components:
+1. Frontend: A Streamlit chat interface that allows users to interact with the RAG system.
+2. Backend: A FastAPI REST API that implements the multi-agent orchestration.
+
+Frontend Architecture (Streamlit)
+- Provides a real-time chat interface
+- Maintains conversation history client-side via session state
+- Communicates with the backend via HTTP requests to /chat
+- Displays agent activity updates and error handling in a user-friendly manner
+
+Backend Architecture (FastAPI)
+- Exposes /chat and /health endpoints
+- Implements a LangGraph-based multi-agent system
+- Manages conversation context and routing between agents
+- Integrates with Pinecone for vector search and OpenRouter for LLM calls
+
+Multi-Agent System Design
+The backend uses four specialized agents working in coordination:
+1. Supervisor Agent - routes incoming user messages to the appropriate handler.
+2. Retrieval Agent - performs vector search on the document collection in Pinecone.
+3. Research Agent - iteratively searches and synthesizes information across up to a fixed number of refinement iterations.
+4. Response Agent - generates the final answer using retrieved context and research findings.
+
+Technology Stack
+- Frontend: Streamlit
+- Backend: FastAPI, Uvicorn
+- Orchestration: LangGraph
+- LLM Access: LangChain with the OpenRouter provider
+- Vector Store: Pinecone (serverless)
+- Package Management: uv (backend), pip (frontend)
+
+Design Goals
+The architecture favors a clear separation between orchestration (LangGraph), retrieval (Pinecone), and generation (OpenRouter-backed LLMs), so each layer can evolve independently without requiring changes to the others.

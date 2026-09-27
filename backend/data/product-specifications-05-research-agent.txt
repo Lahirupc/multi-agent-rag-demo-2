@@ -1,0 +1,42 @@
+PRODUCT SPECIFICATION: RESEARCH AGENT
+=======================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-005
+Version: 1.0
+Date: 2026-03-01
+
+Purpose
+The Research Agent performs iterative document retrieval and synthesis for complex queries that may require exploring the knowledge base from multiple angles.
+
+Behavior
+
+Input: user's original query
+Process:
+1. Perform an initial retrieval search (like the Retrieval Agent)
+2. Synthesize findings from the initial retrieval
+3. Generate a refined query based on the synthesis and gaps identified
+4. Perform another retrieval with the refined query
+5. Repeat steps 2-4 up to a fixed maximum number of iterations
+6. After reaching the iteration limit or identifying no new relevant information, return accumulated findings
+
+Output: comprehensive research summary drawing from all iterations
+
+Key Characteristics
+- Iterative: refines queries and findings across multiple passes
+- Exploratory: may discover document relationships and connections that a single-pass retrieval would miss
+- Costly: each iteration involves embedding, retrieval, and LLM synthesis; bounded iteration count is essential for cost control
+- Grounded: all claims in the research findings can be traced back to specific retrieved documents
+
+Configuration Parameters
+- Max iterations: typically 3-5; this is a hard cap to bound cost
+- Synthesis model temperature: moderate temperature to balance exploration with focus
+- Refinement strategy: determines how queries are refined between iterations (e.g., extending with new keywords, exploring related concepts)
+
+Performance Requirements
+- Latency: &lt; 30 seconds for 95th percentile (bounded by iteration count)
+- Cost: average Research Agent invocation should cost &lt; $0.05 in LLM tokens
+- Research quality: findings should cover multiple aspects of the query and cite specific sources
+
+Next Step
+Results are passed to the Response Agent, which composes a final natural-language answer.

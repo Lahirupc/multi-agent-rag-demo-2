@@ -1,0 +1,34 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0218
+Date: 2026-03-09
+Time: 08:15 UTC
+Severity: High
+Status: Resolved
+Reported By: On-call Engineer
+
+Incident Summary
+A new document added to backend/data/ contained invalid UTF-8 characters, causing the ingestion pipeline to crash and preventing the backend from starting cleanly.
+
+Timeline
+08:15 - Backend restart for routine maintenance failed with a log message about UTF-8 decoding error during ingestion.
+08:20 - On-call confirmed the backend would not start due to the ingestion error.
+08:30 - Examined the most recently added file in backend/data/ and found it contained binary or incorrectly-encoded text.
+08:45 - Removed the problematic file and restarted the backend, which started successfully.
+09:00 - Identified the original source of the file and verified the encoding issue was in the source file, not the git checkout.
+09:15 - Confirmed file content could be recovered from backup; re-ingested with proper UTF-8 encoding.
+
+Root Cause
+A document was added to backend/data/ by a team member working from a non-UTF-8-aware editor, introducing invalid characters. The ingestion pipeline did not gracefully handle non-UTF-8 content and failed the entire startup, preventing the backend from loading at all.
+
+Impact
+The backend was unable to start for approximately 1 hour. All queries to the system returned no response until the backend was restarted after the problematic file was removed.
+
+Resolution
+The problematic file was removed. The ingestion error handling was improved to log and skip files with encoding errors, rather than failing the entire pipeline (see Follow-Up Actions).
+
+Follow-Up Actions
+1. Update the ingestion pipeline to catch and log UTF-8 decode errors per-file, allowing ingestion to continue even if one file is unreadable. (Owner: Backend Team)
+2. Add a pre-commit or pre-merge check to validate that all files in backend/data/ are valid UTF-8. (Owner: Platform Engineering Team)
+3. Document the expected encoding and format requirements in the CLAUDE.md file under Document Management. (Owner: Documentation Team)

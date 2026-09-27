@@ -1,0 +1,34 @@
+POLICY: THIRD-PARTY AND VENDOR API USAGE
+===========================================
+
+Policy ID: POL-VEN-008
+Effective Date: 2026-03-01
+Owner: Platform Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+Governs the selection, monitoring, and cost management of third-party services the system depends on, primarily OpenRouter for LLM access and Pinecone for vector storage.
+
+Scope
+-----
+Applies to any external API or managed service integrated into the backend.
+
+Policy Statements
+------------------
+1. New third-party dependencies must be evaluated for data residency, uptime SLA, and cost before integration.
+2. OpenRouter usage should default to a cost-aware routing strategy (e.g., "openrouter/auto") unless a specific task requires a fixed model.
+3. Monthly spend on OpenRouter and Pinecone must be reviewed by the Platform Engineering Team, with alerts configured for spend exceeding budget thresholds.
+4. Vendor outages must be monitored via status pages, and a fallback behavior (e.g., a friendly error message) must exist for when a vendor is unavailable.
+5. Contracts or terms of service changes from vendors must be reviewed for compliance implications before accepting.
+6. API keys for third-party vendors must be rotated at least every 90 days or immediately upon suspected compromise.
+7. A single point of contact should be designated for each vendor relationship to streamline support requests.
+
+Enforcement
+-----------
+Vendor spend and health are reviewed monthly. Unbudgeted spend spikes trigger an automatic review by the Platform Engineering Team.
+
+Related Documents
+------------------
+- Architecture: LLM Provider (OpenRouter) Integration Architecture
+- Architecture: Vector Store and Pinecone Integration Architecture

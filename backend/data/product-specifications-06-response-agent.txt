@@ -1,0 +1,48 @@
+PRODUCT SPECIFICATION: RESPONSE AGENT
+=======================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-006
+Version: 1.0
+Date: 2026-03-01
+
+Purpose
+The Response Agent synthesizes a final, natural-language answer from retrieved documents or research findings, ensuring the response is grounded and well-articulated.
+
+Behavior
+
+Input: user's original query, retrieved documents or research findings, conversation context (future)
+Process:
+1. Receive the query and context from the preceding agent (Supervisor routed to Retrieval or Research)
+2. Construct a system prompt that prioritizes grounding in the provided documents
+3. Call the LLM with the query, documents, and a request to synthesize an answer
+4. Post-process the response to extract document citations and validate grounding
+5. Return the final response to the user via the /chat endpoint
+
+Output: natural-language answer citing retrieved sources
+
+Key Characteristics
+- Generative: produces fluent, readable answers, not raw document chunks
+- Grounded: always reasons about and cites the retrieved documents
+- Safe: the system prompt prevents ignoring or contradicting provided context
+- Transparent: explicitly notes when answering with or without sufficient grounding
+
+Response Format
+Typical response structure:
+- Opening sentence(s) addressing the question directly
+- Supporting detail drawn from retrieved documents with inline citations
+- Optional follow-up observations or related information
+- Clear attribution of all factual claims to source documents
+
+Configuration Parameters
+- LLM temperature: low (0.2-0.4) to emphasize consistency and grounding
+- Max response length: typically 500-2000 words to balance completeness with usability
+- Citation style: inline [Source: document name] format
+
+Performance Requirements
+- Latency: &lt; 10 seconds (dominated by LLM generation latency)
+- Grounding rate: &gt; 95% of responses should cite retrieved documents
+- Readability: responses should be clear and accessible to domain experts and general users
+
+Failure Modes
+If no retrieved documents are available (Pinecone unavailable or no relevant matches), the Response Agent may indicate the system cannot provide a grounded answer and suggest alternative sources.

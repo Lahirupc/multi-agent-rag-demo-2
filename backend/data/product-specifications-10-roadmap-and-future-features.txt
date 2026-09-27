@@ -1,0 +1,66 @@
+PRODUCT SPECIFICATION: ROADMAP AND FUTURE FEATURES
+==============================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-010
+Version: 1.0
+Date: 2026-03-01
+
+Current State (MVP)
+The current version implements the core multi-agent RAG functionality with four agents (Supervisor, Retrieval, Research, Response), a Streamlit frontend, and Pinecone-backed document retrieval.
+
+Near-Term Enhancements (Q2-Q3 2026)
+
+1. Conversation History and Memory
+   - Store conversation history server-side so it persists across sessions
+   - Allow agents to reference previous messages within the conversation
+   - Implement conversation threading and search
+
+2. Document Source Citation UI
+   - Clickable or expandable citations that show the full source document context
+   - Visual indicators for citation confidence or relevance score
+   - Links to full documents for deeper exploration
+
+3. Feedback and Rating System
+   - Allow users to rate the quality of responses (thumbs up/down)
+   - Collect feedback to improve agent routing and response quality
+   - Build a feedback loop for continuous improvement
+
+4. Advanced Retrieval Options
+   - Document filtering (e.g., "search only policies", "search only architecture docs")
+   - Date range filtering for time-sensitive information
+   - Metadata-based search refinement
+
+Medium-Term Enhancements (Q4 2026 - Q1 2027)
+
+1. Validation Agent
+   - Add a fourth agent responsible for fact-checking responses against the knowledge base
+   - Improve response grounding through automated validation
+
+2. Streaming Responses
+   - Implement WebSocket support for real-time streaming of LLM output
+   - Improve perceived latency by showing partial responses as they're generated
+
+3. Multi-User Support
+   - Support multiple concurrent users with isolated conversations
+   - Implement basic authentication and user identity tracking
+
+4. Analytics and Insights
+   - Track query patterns and popular topics
+   - Identify gaps in the knowledge base
+   - Monitor agent routing decisions and effectiveness
+
+Long-Term Vision (2027+)
+
+1. Custom Agent Framework
+   - Allow users to define custom agents for domain-specific workflows
+   - Agent templates for common patterns (e.g., comparison agents, recommendation agents)
+
+2. Knowledge Base Evolution
+   - Auto-ingestion from external document sources (cloud storage, databases)
+   - Document versioning and rollback capabilities
+   - Collaborative knowledge base editing
+
+3. Advanced Analytics and Learning
+   - Fine-tuning models on domain-specific data for improved accuracy
+   - Active learning to identify high-impact new documents to ingest

@@ -1,0 +1,34 @@
+POLICY: CODE REVIEW
+=====================
+
+Policy ID: POL-ENG-004
+Effective Date: 2026-02-01
+Owner: Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+Ensures that changes to the frontend, backend, and agent orchestration code are reviewed for correctness, security, and maintainability before merging.
+
+Scope
+-----
+Applies to all pull requests against the main branch of the multi-agent-rag-demo repository.
+
+Policy Statements
+------------------
+1. Every pull request requires at least one approving review from a team member other than the author before merge.
+2. Changes to agent routing logic in the LangGraph supervisor must include a rationale for the routing decision in the pull request description.
+3. Changes that touch the /chat or /health endpoints must include or update corresponding tests under backend/tests/.
+4. Reviewers must check for hard-coded secrets, API keys, or credentials before approving any change.
+5. Pull requests introducing a new dependency must justify the addition and confirm the dependency is pinned in requirements.txt or pyproject.toml.
+6. Large pull requests (over roughly 500 changed lines) should be split into smaller, reviewable units where practical.
+7. Reviewers should verify that new agent behavior does not exceed the defined maximum iteration limits to avoid runaway LLM calls.
+
+Enforcement
+-----------
+Branch protection rules on main enforce the required review before merge. Repeated bypassing of this policy is escalated to the engineering lead.
+
+Related Documents
+------------------
+- Architecture: LangGraph Multi-Agent Workflow Architecture
+- Runbook: Production Deployment Runbook

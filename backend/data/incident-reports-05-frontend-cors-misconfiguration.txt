@@ -1,0 +1,34 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0204
+Date: 2026-03-03
+Time: 13:19 UTC
+Severity: Medium
+Status: Resolved
+Reported By: User Report
+
+Incident Summary
+After deploying the frontend to a new staging environment at a different hostname, cross-origin requests from the frontend to the backend failed with CORS errors, causing all chat requests to fail.
+
+Timeline
+13:19 - User reported chat not working on the staging frontend deployed at staging.example.com.
+13:25 - On-call confirmed backend /health endpoint was reachable, but /chat requests failed with CORS errors in the browser console.
+13:40 - Checked backend CORS configuration and found the allowlist only included localhost:8501 and localhost:3000, but not the staging frontend's origin.
+13:50 - Updated backend CORS middleware to include staging.example.com:8501.
+14:05 - Redeployed backend and confirmed CORS errors were resolved.
+14:20 - User confirmed chat functionality was restored on the staging frontend.
+
+Root Cause
+The CORS allowlist in the backend hardcoded the development localhost origins and was not updated when the frontend was deployed to a new staging origin. The change deployment process failed to trigger a backend redeploy to update the allowlist.
+
+Impact
+Users of the staging frontend were unable to use the application for approximately 1 hour until the CORS configuration was updated and redeployed.
+
+Resolution
+CORS allowlist was expanded to include the staging origin. Backend was redeployed and tested.
+
+Follow-Up Actions
+1. Extract the CORS allowlist to an environment variable so it can be updated without code changes or redeploy. (Owner: Backend Team)
+2. Add a pre-deployment checklist item to verify CORS settings match the target deployment's origins. (Owner: Platform Engineering Team)
+3. Document the CORS configuration procedure in the Production Deployment Runbook. (Owner: Platform Engineering Team)

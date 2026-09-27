@@ -1,0 +1,43 @@
+PRODUCT SPECIFICATION: KNOWLEDGE BASE REQUIREMENTS
+====================================================
+
+Product: Multi-Agent RAG Demo
+Specification ID: SPEC-008
+Version: 1.0
+Date: 2026-03-01
+
+Knowledge Base Composition
+
+The knowledge base consists of documents in the following categories:
+- Architecture Documents: system design, component interactions, data flows
+- Policies: organizational rules, access control, change procedures
+- Runbooks: step-by-step operational procedures
+- Incident Reports: past outages, root causes, lessons learned
+- Product Specifications: feature definitions, behavior contracts, performance requirements
+- Meeting Notes: discussions, decisions, action items
+
+Document Format and Storage
+- Format: Plain text (.txt) or Markdown (.md), UTF-8 encoded
+- Storage: Files placed directly in backend/data/ (non-recursive)
+- Naming: Descriptive filenames with category prefix (e.g., policies-01-*.txt)
+- Size: Individual documents typically 1000-5000 words; longer topics split into multiple documents
+
+Ingestion and Indexing
+- Documents are split into overlapping chunks (1000 characters, 200 character overlap)
+- Chunks are embedded using the configured embedding model
+- Embeddings are stored in Pinecone with metadata (source filename, chunk index)
+- Ingestion is idempotent: if any documents exist in the index, ingestion is skipped
+
+Retrieval Characteristics
+- Retrieval should return chunks that are contextually relevant to the query
+- Metadata should accurately identify the source document for each chunk
+- Coverage: the knowledge base should contain information sufficient to answer typical operational and product questions
+
+Quality Expectations
+- Documents should be accurate, up-to-date, and reviewed before ingestion
+- Superseded documents must be removed from backend/data/ to avoid conflicting information
+- Documents should be written for clarity and conciseness, targeting domain experts
+
+Maintenance
+- Document owners should review their documents annually or immediately after major changes
+- Additions or updates are tracked via pull request review before merge

@@ -1,0 +1,30 @@
+RUNBOOK: ROLLBACK DEPLOYMENT
+===============================
+
+Purpose:
+Describes how to safely roll back the backend or frontend to a previous known-good version after a problematic deployment.
+
+When to Roll Back:
+- A newly deployed change causes elevated error rates on /chat or /health.
+- A newly deployed change introduces a regression discovered post-release that cannot be quickly hotfixed.
+
+Prerequisites:
+- The commit hash or tag of the last known-good deployment (recorded in the deployment log per the Change Management Policy).
+- Access to the deployment platform used for the affected service.
+
+Backend Rollback Steps:
+1. Identify the last known-good commit hash from the deployment log.
+2. Redeploy the backend service using that commit hash, following the standard deployment process.
+3. Confirm the rollback by checking GET /health and the version or commit hash exposed in logs at startup.
+4. Run a smoke test against /chat with a representative query.
+5. Monitor error rates and latency for at least 15 minutes post-rollback.
+
+Frontend Rollback Steps:
+1. Identify the last known-good commit hash for the frontend.
+2. Redeploy the Streamlit app using that commit hash.
+3. Manually verify the chat interface loads and successfully sends/receives messages against the current backend.
+
+Post-Rollback:
+- Notify stakeholders that the rollback is complete and the system is stable.
+- File or update the associated incident report with the rollback action and timestamp.
+- Do not re-attempt the original change until the root cause is understood and a fix is validated in staging.

@@ -1,0 +1,23 @@
+ARCHITECTURE DOCUMENT: OBSERVABILITY AND LOGGING
+====================================================
+
+Overview
+Observability for the Multi-Agent RAG Demo focuses on three signals: application logs, agent-level tracing, and basic health metrics, to help diagnose issues across the multi-agent pipeline.
+
+Application Logging
+The backend uses Python's standard logging module. Each major component (ingestion, agents, vectorstore access) logs at INFO level for normal operation and ERROR level for failures, including enough context (component name, error message) to triage without exposing sensitive message content.
+
+Agent-Level Tracing
+Each agent node in the LangGraph workflow logs when it starts and completes processing, along with which node it hands off to next. This trace is also surfaced to the frontend's agent activity panel in near real time.
+
+Health Signals
+The /health endpoint provides a basic liveness signal. Deeper health checks (e.g., verifying Pinecone and OpenRouter connectivity) are performed at startup during ingestion and logged, but are not currently exposed as a dedicated readiness endpoint.
+
+Metrics of Interest
+Key metrics to track in production include: /chat request latency, LLM token usage per request, Research Agent average iteration count, and Pinecone query latency.
+
+Alerting Considerations
+Alerts should be configured for elevated 500 error rates on /chat, sustained increases in Research Agent iteration counts (which may indicate a routing regression), and Pinecone or OpenRouter connectivity failures.
+
+Future Improvements
+Planned improvements include structured JSON logging and integration with a centralized log aggregation and tracing platform to correlate a single user request across all four agents.

@@ -1,0 +1,34 @@
+POLICY: INCIDENT RESPONSE
+============================
+
+Policy ID: POL-OPS-006
+Effective Date: 2026-02-15
+Owner: Platform Engineering Team
+Review Cycle: Annual
+
+Purpose
+-------
+Establishes a consistent process for detecting, reporting, and resolving incidents affecting the availability or correctness of the Multi-Agent RAG Demo.
+
+Scope
+-----
+Applies to outages, degraded performance, data integrity issues, and security events involving the frontend, backend, vector store, or LLM provider.
+
+Policy Statements
+------------------
+1. Any team member who observes a service disruption must open an incident report using the standard template within 30 minutes of detection.
+2. Incidents are classified by severity: Critical (full outage), High (major feature broken), Medium (degraded but usable), Low (cosmetic or minor).
+3. Critical and High severity incidents require a dedicated incident channel and an assigned incident commander until resolution.
+4. A root cause analysis must be completed and documented for every Critical or High severity incident within five business days of resolution.
+5. Incident reports must include a timeline of detection, mitigation, and resolution, along with follow-up action items and owners.
+6. Communication to stakeholders during an active incident should occur at least every 30 minutes for Critical severity issues.
+7. Post-incident action items must be tracked to completion; unresolved items are reviewed in the following sprint planning meeting.
+
+Enforcement
+-----------
+The on-call engineer is responsible for initiating this process. Failure to file an incident report for a qualifying event is reviewed by the engineering lead.
+
+Related Documents
+------------------
+- Runbook: Incident Response Runbook
+- Incident Report Template (see incident-reports documents)

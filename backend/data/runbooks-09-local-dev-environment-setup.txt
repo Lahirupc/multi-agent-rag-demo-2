@@ -1,0 +1,36 @@
+RUNBOOK: LOCAL DEVELOPMENT ENVIRONMENT SETUP
+===============================================
+
+Purpose:
+Gets a new engineer from a fresh clone of the repository to a fully working local instance of both the frontend and backend.
+
+Prerequisites:
+- Python 3.12+ installed
+- Git installed and repository cloned locally
+- An OpenRouter API key and Pinecone API key (obtained from the Platform Engineering Team if not already provisioned)
+
+Backend Setup:
+1. cd backend
+2. python -m venv .venv
+3. .\.venv\Scripts\Activate.ps1
+4. pip install -r requirements.txt (or uv pip install -r requirements.txt if using uv)
+5. Copy backend/.env.example to backend/.env and fill in OPENROUTER_API_KEY and Pinecone configuration values.
+6. Start the backend: python main.py
+
+Frontend Setup:
+1. Open a new terminal window (leave the backend running).
+2. cd frontend
+3. python -m venv .venv
+4. .\.venv\Scripts\Activate.ps1
+5. pip install -r requirements.txt
+6. Copy frontend/.env.example to frontend/.env, confirming BACKEND_URL points to http://localhost:8000.
+7. Start the frontend: streamlit run app.py
+
+Verification:
+1. Open http://localhost:8501 in a browser.
+2. Send a test chat message and confirm a response is returned within a few seconds.
+3. Confirm the agent activity panel shows updates as the request is processed.
+
+Common Setup Issues:
+- Missing .env file: the backend will fail to start or return 500 errors on /chat; confirm .env exists and is populated.
+- Port conflicts: stop any other process using port 8000 or 8501, or change the port in the startup command.

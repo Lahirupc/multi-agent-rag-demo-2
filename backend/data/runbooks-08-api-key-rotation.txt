@@ -1,0 +1,30 @@
+RUNBOOK: API KEY ROTATION
+============================
+
+Purpose:
+Describes how to rotate the OPENROUTER_API_KEY or Pinecone API key with minimal downtime, whether as routine maintenance or in response to a suspected compromise.
+
+Prerequisites:
+- Administrative access to the OpenRouter or Pinecone console
+- Access to the production secrets manager or CI/CD secret store
+
+Routine Rotation Steps:
+1. Generate a new API key in the provider's console (OpenRouter or Pinecone) without immediately revoking the old key.
+2. Update the secret in the production secrets manager with the new key value.
+3. Redeploy or restart the backend service so it picks up the new environment variable value.
+4. Verify the backend starts successfully and GET /health returns a healthy status.
+5. Run a smoke test against /chat to confirm the new key is functioning correctly.
+6. Revoke the old API key in the provider's console once the new key is confirmed working.
+
+Emergency Rotation Steps (suspected compromise):
+1. Immediately revoke the compromised key in the provider's console, even before a replacement is ready, to stop unauthorized use.
+2. Generate a new key and update the secrets manager as above.
+3. Redeploy the backend as quickly as possible to restore service.
+4. File an incident report documenting the suspected compromise, timeline, and remediation per the Incident Response Policy.
+
+Verification:
+- Confirm no requests are failing due to authentication errors in backend logs after rotation.
+- Confirm the old key no longer authenticates successfully against the provider's API.
+
+Post-Rotation:
+Update the local .env.example if the key format or required scopes changed, and notify the team the rotation is complete.

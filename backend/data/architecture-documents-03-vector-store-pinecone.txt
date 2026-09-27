@@ -1,0 +1,23 @@
+ARCHITECTURE DOCUMENT: VECTOR STORE AND PINECONE INTEGRATION
+================================================================
+
+Overview
+Pinecone serves as the system's vector database, storing embeddings of ingested documents and supporting similarity search for the Retrieval and Research agents.
+
+Index Configuration
+The system uses a Pinecone serverless index, chosen for its scalability and reduced operational overhead compared to managing pod-based infrastructure. The index stores document chunk embeddings alongside metadata such as source filename and chunk number.
+
+Ingestion Flow
+Documents placed in backend/data/ are split into chunks using a recursive character text splitter (chunk size 1000, overlap 200), embedded, and upserted into the Pinecone index. Ingestion is idempotent: a lightweight similarity search is performed at startup to detect whether documents have already been ingested before re-processing the data directory.
+
+Query Flow
+At query time, the Retrieval and Research agents embed the user's query using the same embedding model used at ingestion time, then perform a similarity search against the index to retrieve the top-k most relevant chunks.
+
+Metadata Usage
+Each stored vector includes metadata identifying its source document and chunk index, enabling the Response Agent to cite or reason about which document(s) informed its answer.
+
+Scaling Considerations
+Serverless Pinecone scales storage and query throughput automatically, but query latency and cost still scale with the number of vectors and the dimensionality of the embedding model, both of which are considered when selecting an embedding model.
+
+Failure Modes
+If Pinecone is unreachable, retrieval calls fail and the Supervisor Agent should fall back to a direct LLM response with a caveat that no grounded context was available, rather than failing the entire request.

@@ -1,0 +1,33 @@
+INCIDENT REPORT
+================
+
+Incident ID: INC-2026-0156
+Date: 2026-02-11
+Time: 09:33 UTC
+Severity: High
+Status: Resolved
+Reported By: Security Scanning
+
+Incident Summary
+A developer accidentally committed the OpenRouter API key to a branch in plaintext, which was discovered by automated secret scanning before merge.
+
+Timeline
+09:33 - Secret scanning CI check failed on a pull request with a commit containing OPENROUTER_API_KEY in a temporary test file.
+09:35 - Pull request author notified immediately; developer confirmed the accidental commit.
+09:50 - Credential was manually rotated in the OpenRouter console; old key revoked within 17 minutes of detection.
+10:05 - Commit was rewritten to remove the secret (force-push after security review).
+10:10 - New API key was deployed to production and verified functional.
+
+Root Cause
+A developer added a temporary debugging line with the real API key to a test file and committed it without realizing the file would be included in the pull request. The file was not properly excluded from git.
+
+Impact
+The key was exposed in the repository history for approximately 37 minutes before being revoked. No evidence of unauthorized use was detected in OpenRouter's usage logs during this window, and the key was rotated before deployment to production.
+
+Resolution
+The old key was revoked. The new key was updated in the secrets manager and deployed. The branch history was rewritten to remove the exposed key, and branch protection rules were enforced.
+
+Follow-Up Actions
+1. Reinforce developer training on secrets management and .gitignore best practices. (Owner: Platform Team)
+2. Verify all CI secret scanning rules are enabled and correctly configured for all repository branches. (Owner: Platform Team)
+3. Implement pre-commit hooks that scan for common credential patterns before committing. (Owner: Platform Engineering Team)

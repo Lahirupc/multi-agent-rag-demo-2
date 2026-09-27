@@ -1,0 +1,24 @@
+ARCHITECTURE DOCUMENT: DATA INGESTION PIPELINE
+=================================================
+
+Overview
+The ingestion pipeline (backend/agents/ingest.py) is responsible for loading seed knowledge base documents into Pinecone so the Retrieval and Research agents have content to search over.
+
+Pipeline Stages
+1. Discovery: all .md and .txt files directly under backend/data/ are discovered (the directory is not scanned recursively).
+2. Loading: each file's raw text content is read from disk.
+3. Splitting: content is split into overlapping chunks using a recursive character text splitter (chunk size 1000 characters, overlap 200 characters) to preserve context across chunk boundaries.
+4. Metadata Tagging: each chunk is tagged with its source filename and chunk index.
+5. Embedding and Upsert: chunks are embedded and upserted into the Pinecone index via the vectorstore client.
+
+Idempotency
+Before running the full pipeline, a lightweight similarity search is performed against the index. If results are returned, the pipeline assumes documents are already ingested and skips reprocessing, avoiding duplicate vectors on every backend restart.
+
+Error Handling
+Errors ingesting an individual file are logged and do not halt the overall pipeline; the pipeline continues processing remaining files so a single malformed document does not block the entire knowledge base from loading.
+
+Adding New Documents
+To add a new document to the knowledge base, place a new .txt or .md file directly in backend/data/. Because the ingestion check is based on whether any documents exist at all, adding files after initial ingestion currently requires a manual re-ingestion trigger or clearing the idempotency check.
+
+Future Improvements
+Planned improvements include per-file ingestion tracking (rather than a single existence check) and support for recursive subdirectories under backend/data/.
