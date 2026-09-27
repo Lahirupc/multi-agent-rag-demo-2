@@ -2,7 +2,7 @@ import os
 import functools
 from langchain_openrouter import ChatOpenRouter
 
-
+# model selection: Deepseek was selected because it works well with agentic work and to lower the cost
 @functools.lru_cache(maxsize=1)
 def get_chat_model() -> ChatOpenRouter:
     api_key = os.getenv("OPENROUTER_API_KEY")

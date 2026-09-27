@@ -81,6 +81,12 @@ Or with uvicorn directly:
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Or with fastapi for dev server:
+
+```powershell
+uv run fastapi dev
+```
+
 The API will be available at `http://localhost:8000`, with interactive docs at `http://localhost:8000/docs`. Confirm it's running by checking `http://localhost:8000/health`.
 
 ### 2. Frontend (Streamlit)
