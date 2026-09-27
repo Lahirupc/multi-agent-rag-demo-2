@@ -10,25 +10,12 @@ def _build_system_prompt(state: GraphState) -> str:
     """Build the system prompt with context from retrieved docs and findings."""
     retrieved_docs = state.get("retrieved_docs", [])
     research_findings = state.get("research_findings", [])
-    route = state.get("route")
-
-    has_context = bool(retrieved_docs or research_findings)
-
-    if not has_context:
-        if route in ("retrieval", "research"):
-            # Retrieval/research was attempted but found nothing relevant.
-            # Be explicit so the model doesn't fall back to fabricating an answer.
-            return (
-                "You are a helpful AI assistant. You searched the knowledge base for "
-                "information relevant to the user's question, but found nothing relevant. "
-                "Tell the user you don't have information on this topic in the available "
-                "documents. Do not answer from your own general knowledge or make up "
-                "information."
-            )
-        # No retrieval was attempted (casual conversation) - general assistant is fine.
-        return "You are a helpful AI assistant."
 
     context_parts = []
+    
+    if not retrieved_docs and not research_findings:
+        context_parts.append("No context")
+
 
     if retrieved_docs:
         context_parts.append("Context from documents:")
@@ -46,10 +33,10 @@ def _build_system_prompt(state: GraphState) -> str:
 
     return f"""You are a helpful AI assistant. Use the following context to answer the user's question.
 
-Context:
-{context_text}
+            Context:
+                {context_text}
 
-Only use the information in the context above to answer. If the context doesn't fully answer the question, tell the user what information is missing rather than guessing or using outside knowledge."""
+            If the context is "No context" then say "I don't have any information related to this."""
 
 
 async def response_node(state: GraphState) -> dict:
