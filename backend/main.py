@@ -1,8 +1,10 @@
 import os
 import uuid
+import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import logging
 from langchain_core.messages import HumanMessage
@@ -10,6 +12,7 @@ from dotenv import load_dotenv
 
 from agents.ingest import ingest_documents_if_needed
 from agents.graph import build_graph
+from agents.activity import build_activity_events
 
 load_dotenv()
 
@@ -26,6 +29,42 @@ class ChatResponse(BaseModel):
     response: str
     status: str
     session_id: str
+
+
+def _build_initial_state(message: str, session_id: str) -> dict:
+    """Build the initial state dict for graph invocation."""
+    return {
+        "messages": [HumanMessage(content=message)],
+        "session_id": session_id,
+        "route": None,
+        "retrieved_docs": [],
+        "research_findings": [],
+        "research_query": None,
+        "research_iterations": 0,
+        "max_research_iterations": int(os.getenv("MAX_RESEARCH_ITERATIONS", "3")),
+    }
+
+
+async def _stream_chat_events(graph, initial_state: dict, session_id: str):
+    """Stream activity events from graph execution as NDJSON lines."""
+    final_content = ""
+    try:
+        async for update in graph.astream(
+            initial_state,
+            config={"configurable": {"thread_id": session_id}},
+            stream_mode="updates",
+        ):
+            for node_name, payload in update.items():
+                for event in build_activity_events(node_name, payload):
+                    yield json.dumps(event) + "\n"
+                if node_name == "response":
+                    messages = payload.get("messages") or []
+                    if messages:
+                        final_content = messages[-1].content
+        yield json.dumps({"type": "final", "content": final_content, "session_id": session_id}) + "\n"
+    except Exception as e:
+        logger.error(f"Error during streaming chat: {e}")
+        yield json.dumps({"type": "error", "detail": "Error processing request"}) + "\n"
 
 
 @asynccontextmanager
@@ -82,17 +121,9 @@ async def chat(chat_request: ChatRequest, request: Request) -> ChatResponse:
     session_id = chat_request.session_id or str(uuid.uuid4())
 
     try:
+        initial_state = _build_initial_state(chat_request.message, session_id)
         result = await request.app.state.graph.ainvoke(
-            {
-                "messages": [HumanMessage(content=chat_request.message)],
-                "session_id": session_id,
-                "route": None,
-                "retrieved_docs": [],
-                "research_findings": [],
-                "research_query": None,
-                "research_iterations": 0,
-                "max_research_iterations": int(os.getenv("MAX_RESEARCH_ITERATIONS", "3")),
-            },
+            initial_state,
             config={"configurable": {"thread_id": session_id}},
         )
 
@@ -106,6 +137,25 @@ async def chat(chat_request: ChatRequest, request: Request) -> ChatResponse:
     except Exception as e:
         logger.error(f"Error processing chat: {e}")
         raise HTTPException(status_code=500, detail="Error processing request")
+
+
+@app.post("/chat/stream")
+async def chat_stream(chat_request: ChatRequest, request: Request):
+    """Stream chat events as NDJSON for real-time activity panel updates."""
+    if not chat_request.message or not chat_request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    if not os.getenv("OPENROUTER_API_KEY"):
+        logger.error("OPENROUTER_API_KEY not set")
+        raise HTTPException(status_code=500, detail="API key not configured")
+
+    session_id = chat_request.session_id or str(uuid.uuid4())
+    initial_state = _build_initial_state(chat_request.message, session_id)
+
+    return StreamingResponse(
+        _stream_chat_events(request.app.state.graph, initial_state, session_id),
+        media_type="application/x-ndjson",
+    )
 
 
 @app.get("/")

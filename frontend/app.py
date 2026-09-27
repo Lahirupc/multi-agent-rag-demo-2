@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 import uuid
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,6 +24,33 @@ if "session_id" not in st.session_state:
 if "error_message" not in st.session_state:
     st.session_state.error_message = None
 
+if "activity_log" not in st.session_state:
+    st.session_state.activity_log = []
+
+
+ACTIVITY_ICONS = {
+    "node": "🧭",
+    "route": "🔀",
+    "tool_call": "🔧",
+    "retrieval_status": "📄",
+    "memory_update": "💾",
+    "validation": "✅",
+    "final_response": "🏁",
+}
+
+
+def render_activity_panel(placeholder, events):
+    if not events:
+        placeholder.caption("No activity yet.")
+        return
+    lines = []
+    for e in events:
+        icon = ACTIVITY_ICONS.get(e["type"], "•")
+        if e["type"] == "validation" and not e.get("passed", True):
+            icon = "⚠️"
+        lines.append(f"{icon} **{e.get('node', '')}** — {e['label']}")
+    placeholder.markdown("\n\n".join(lines))
+
 @st.dialog("⚠️ Error")
 def show_error_dialog(error_text):
     st.markdown(error_text)
@@ -32,6 +60,11 @@ def show_error_dialog(error_text):
 
 if st.session_state.error_message:
     show_error_dialog(st.session_state.error_message)
+
+# Always-visible activity panel in sidebar
+st.sidebar.markdown("### Agent Activity")
+activity_placeholder = st.sidebar.empty()
+render_activity_panel(activity_placeholder, st.session_state.activity_log)
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -47,18 +80,42 @@ if prompt := st.chat_input("Ask me anything..."):
         full_response = ""
         error_occurred = False
 
+        # Reset activity log and re-render the panel (empty) when a new prompt is submitted
+        st.session_state.activity_log = []
+        render_activity_panel(activity_placeholder, st.session_state.activity_log)
+
         try:
             response = requests.post(
-                f"{BACKEND_URL}/chat",
+                f"{BACKEND_URL}/chat/stream",
                 json={"message": prompt, "session_id": st.session_state.session_id},
                 timeout=REQUEST_TIMEOUT,
-                stream=False
+                stream=True
             )
             response.raise_for_status()
 
-            data = response.json()
-            full_response = data.get("response", "Sorry, I encountered an error processing your request.")
-            st.session_state.session_id = data.get("session_id", st.session_state.session_id)
+            for line in response.iter_lines(decode_unicode=True):
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                event_type = event.get("type")
+
+                if event_type == "error":
+                    st.session_state.error_message = event.get("detail", "Error processing request")
+                    error_occurred = True
+                    break
+
+                elif event_type == "final":
+                    full_response = event.get("content", "")
+                    st.session_state.session_id = event.get("session_id", st.session_state.session_id)
+
+                else:
+                    # Add to activity log and update sidebar
+                    st.session_state.activity_log.append(event)
+                    render_activity_panel(activity_placeholder, st.session_state.activity_log)
 
         except requests.exceptions.ConnectionError:
             error_msg = f"Cannot connect to backend at {BACKEND_URL}. Please ensure the backend is running."
@@ -89,4 +146,5 @@ st.sidebar.info(f"Backend URL: `{BACKEND_URL}`")
 if st.sidebar.button("Clear Chat History"):
     st.session_state.messages = []
     st.session_state.session_id = str(uuid.uuid4())
+    st.session_state.activity_log = []
     st.rerun()
