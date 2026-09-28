@@ -27,6 +27,40 @@ if "error_message" not in st.session_state:
 if "activity_log" not in st.session_state:
     st.session_state.activity_log = []
 
+if "memory_info" not in st.session_state:
+    st.session_state.memory_info = None
+
+
+def refresh_memory_info():
+    """Fetch the current session's stored memory from the backend."""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/sessions/{st.session_state.session_id}/memory", timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        st.session_state.memory_info = resp.json()
+    except requests.exceptions.RequestException:
+        # Non-fatal: memory panel just stays stale/empty if this fails.
+        pass
+
+
+def render_memory_panel():
+    st.sidebar.markdown("### Session Memory")
+    info = st.session_state.memory_info
+    if not info:
+        st.sidebar.caption("No memory yet.")
+        return
+
+    profile = info.get("user_profile") or {}
+    if profile:
+        st.sidebar.markdown("**About you:**")
+        for key, value in profile.items():
+            st.sidebar.markdown(f"- {key}: {value}")
+
+    questions = info.get("previous_questions") or []
+    if questions:
+        st.sidebar.markdown(f"**Previous questions ({len(questions)}):**")
+        for q in questions[-5:]:
+            st.sidebar.markdown(f"- {q}")
+
 
 ACTIVITY_ICONS = {
     "node": "🧭",
@@ -135,16 +169,25 @@ if prompt := st.chat_input("Ask me anything..."):
         if not error_occurred:
             message_placeholder.markdown(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
+            refresh_memory_info()
         else:
             st.session_state.messages.pop()
             st.rerun()
+
+render_memory_panel()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Settings")
 st.sidebar.info(f"Backend URL: `{BACKEND_URL}`")
 
 if st.sidebar.button("Clear Chat History"):
+    try:
+        requests.delete(f"{BACKEND_URL}/sessions/{st.session_state.session_id}", timeout=REQUEST_TIMEOUT)
+    except requests.exceptions.RequestException:
+        # Non-fatal: we still start a fresh session below even if the delete fails.
+        pass
     st.session_state.messages = []
     st.session_state.session_id = str(uuid.uuid4())
     st.session_state.activity_log = []
+    st.session_state.memory_info = None
     st.rerun()

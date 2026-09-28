@@ -149,6 +149,13 @@ Content-Type: application/json
 
 Valid status codes: 200 (success), 400 (empty message), 500 (API key missing or processing error)
 
+### Conversational Memory Endpoints
+
+- `GET /sessions/{session_id}/memory` - returns the session's stored `user_profile`, `previous_questions`, `interactions`, and `turn_count`.
+- `DELETE /sessions/{session_id}` - deletes a session's conversation and memory from the checkpointer (used by the frontend's "Clear Chat History" button).
+
+Conversational memory (`agents/memory.py`) is implemented as two extra LangGraph nodes, `memory_load` (runs before the supervisor; rewrites the latest message into a standalone question and extracts user facts) and `memory_save` (runs after the response node; records the turn and prunes old raw messages). It's stored in the same `GraphState` that LangGraph's `MemorySaver` checkpoints per `session_id`/`thread_id`, so it survives for the life of a session but is lost on backend restart (see `backend/agents/state.py` for the `user_profile`/`interactions` fields). **Important:** `main.py`'s `_build_initial_state` must never include `user_profile` or `interactions` keys, since LangGraph merges the input as a partial state update and including those keys (even as empty defaults) would wipe memory on every turn.
+
 ## Common Development Tasks
 
 ### Installing New Dependencies

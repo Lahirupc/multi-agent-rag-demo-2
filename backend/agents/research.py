@@ -32,12 +32,14 @@ async def research_node(state: GraphState) -> dict:
             "research_iterations": research_iterations + 1,
         }
 
-    # Get the original question (first user message)
-    user_message = None
-    for msg in state["messages"]:
-        if isinstance(msg, HumanMessage):
-            user_message = msg.content
-            break
+    # Use the current turn's question (rewritten to be standalone by memory_load),
+    # not the first message of the whole conversation.
+    user_message = state.get("standalone_question")
+    if not user_message:
+        for msg in reversed(state["messages"]):
+            if isinstance(msg, HumanMessage):
+                user_message = msg.content
+                break
 
     if not user_message:
         return {
@@ -65,8 +67,9 @@ async def research_node(state: GraphState) -> dict:
     # Search for documents via hybrid (dense + sparse) search
     results = await hybrid_search(search_query, k=4)
 
-    # Add findings that aren't already in research_findings
-    current_findings = state.get("research_findings", [])
+    # Add findings that aren't already in research_findings (copy rather than
+    # mutate the existing list in place, since it may be shared with state)
+    current_findings = list(state.get("research_findings", []))
     for doc in results:
         content = doc.page_content
         if content not in current_findings:

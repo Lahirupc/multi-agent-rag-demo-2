@@ -32,7 +32,13 @@ class ChatResponse(BaseModel):
 
 
 def _build_initial_state(message: str, session_id: str) -> dict:
-    """Build the initial state dict for graph invocation."""
+    """Build the initial state dict for graph invocation.
+
+    Note: this must NOT include `user_profile` or `interactions`. LangGraph
+    merges this dict into the checkpointed state as a partial update, so
+    including those keys here (even as empty defaults) would wipe out
+    conversational memory on every single turn.
+    """
     return {
         "messages": [HumanMessage(content=message)],
         "session_id": session_id,
@@ -156,6 +162,31 @@ async def chat_stream(chat_request: ChatRequest, request: Request):
         _stream_chat_events(request.app.state.graph, initial_state, session_id),
         media_type="application/x-ndjson",
     )
+
+
+@app.get("/sessions/{session_id}/memory")
+async def get_session_memory(session_id: str, request: Request):
+    """Return what conversational memory is stored for a session."""
+    graph = request.app.state.graph
+    state_snapshot = await graph.aget_state(config={"configurable": {"thread_id": session_id}})
+    values = state_snapshot.values or {}
+
+    interactions = values.get("interactions", [])
+    return {
+        "session_id": session_id,
+        "user_profile": values.get("user_profile", {}),
+        "turn_count": values.get("turn_count", 0),
+        "previous_questions": [i["standalone_question"] for i in interactions],
+        "interactions": interactions,
+    }
+
+
+@app.delete("/sessions/{session_id}")
+async def delete_session(session_id: str, request: Request):
+    """Delete a session's conversation and memory from the checkpointer."""
+    graph = request.app.state.graph
+    await graph.checkpointer.adelete_thread(session_id)
+    return {"status": "deleted", "session_id": session_id}
 
 
 @app.get("/")

@@ -28,7 +28,13 @@ The backend orchestrates a LangGraph multi-agent workflow (`backend/agents/graph
 
 ```mermaid
 flowchart TD
-    START(["START"]) --> Supervisor
+    START(["START"]) --> MemoryLoad
+
+    MemoryLoad["🧠 Memory Load Node
+(agents/memory.py)
+rewrites message as standalone
+question, extracts user facts"]
+    MemoryLoad --> Supervisor
 
     Supervisor["🧭 Supervisor Node
 (agents/supervisor.py)
@@ -64,27 +70,38 @@ sparse (BM25), weighted fusion"]]
     Response["✍️ Response Node
 (agents/response.py)
 builds context prompt from
-retrieved_docs / research_findings
+retrieved_docs / research_findings /
+conversation memory
 LLM generates final answer"]
-    Response --> END(["END"])
+    Response --> MemorySave
+
+    MemorySave["🧠 Memory Save Node
+(agents/memory.py)
+records the turn, prunes
+old raw messages"]
+    MemorySave --> END(["END"])
 
     LLM[("🤖 Chat Model
 (agents/llm.py)
 OpenRouter via LangChain")]
+    MemoryLoad -.calls.-> LLM
     Supervisor -.calls.-> LLM
     Research -.calls.-> LLM
     Response -.calls.-> LLM
 
     Checkpoint[("💾 MemorySaver Checkpointer
 keyed by session_id / thread_id")]
-    Checkpoint -.persists state for.-> Supervisor
+    Checkpoint -.persists state for.-> MemoryLoad
 ```
 
-- **Supervisor**: an LLM call classifies the latest user message into `retrieval`, `research`, or `response`.
-- **Retrieval**: runs one hybrid (dense + BM25) search and flows straight to `response`.
-- **Research**: iteratively reformulates the query and searches again, accumulating findings until `research_iterations` reaches `max_research_iterations` (default 3), then flows to `response`.
-- **Response**: builds a context-aware system prompt from any retrieved docs/findings and generates the final answer via the chat model.
-- State is checkpointed per `session_id` via LangGraph's `MemorySaver`, enabling multi-turn conversations.
+- **Memory Load**: rewrites the latest message into a standalone question (resolving "it"/"that" against recent turns), extracts durable user facts (name, team, preferences), and selects relevant past interactions.
+- **Supervisor**: an LLM call classifies the standalone question into `retrieval`, `research`, or `response`.
+- **Retrieval**: runs one hybrid (dense + BM25) search against the standalone question and flows straight to `response`.
+- **Research**: iteratively reformulates the standalone question and searches again, accumulating findings until `research_iterations` reaches `max_research_iterations` (default 3), then flows to `response`.
+- **Response**: builds a context-aware system prompt from any retrieved docs/findings, the user's profile, previous questions, and relevant earlier exchanges, then generates the final answer via the chat model.
+- **Memory Save**: appends this turn to the conversation's interaction history and prunes old raw messages beyond `MEMORY_WINDOW_TURNS`, keeping state bounded across a long-running session.
+- State is checkpointed per `session_id` via LangGraph's `MemorySaver`, enabling multi-turn conversations. Conversational memory (user profile, interaction history) lives in this same checkpointed state and lasts for the life of the session (until the backend restarts or the session is deleted via `DELETE /sessions/{id}`).
+- `GET /sessions/{id}/memory` returns the stored profile, previous questions, and turn count for a session.
 
 ## Getting Started
 
@@ -129,6 +146,9 @@ PINECONE_REGION=us-east-1
 EMBEDDING_MODEL=openai/text-embedding-3-small
 CHAT_MODEL=deepseek/deepseek-v4.1-flash
 MAX_RESEARCH_ITERATIONS=3
+MEMORY_WINDOW_TURNS=6
+MEMORY_RELEVANT_K=3
+MEMORY_MAX_INTERACTIONS=50
 ```
 
 (`LANGCHAIN_TRACING_V2` and `LANGCHAIN_API_KEY` are optional and only needed if you want LangSmith tracing.)

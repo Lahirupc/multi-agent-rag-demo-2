@@ -11,8 +11,10 @@ async def retrieval_node(state: GraphState) -> dict:
     if not state["messages"]:
         return {"retrieved_docs": []}
 
-    latest_message = state["messages"][-1]
-    query = latest_message.content if isinstance(latest_message, HumanMessage) else str(latest_message)
+    query = state.get("standalone_question")
+    if not query:
+        latest_message = state["messages"][-1]
+        query = latest_message.content if isinstance(latest_message, HumanMessage) else str(latest_message)
 
     results = await hybrid_search(query, k=4)
 
